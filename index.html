@@ -1,0 +1,3059 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SolarWatch Pro — Monitoring Panel Surya</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com">
+    </script>
+
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js">
+    </script>
+
+    <style>
+        /* ============================================================
+           CUSTOM STYLES
+           ============================================================ */
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            height: 100vh;
+            overflow: hidden;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0a0e1a 0%, #1a1a2e 40%, #16213e 100%);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background: rgba(10, 14, 26, 0.95);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255, 255, 255, 0.04);
+            z-index: 100;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            overflow-y: auto;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 3px;
+        }
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(52, 211, 153, 0.3);
+            border-radius: 99px;
+        }
+
+        .sidebar-link {
+            color: #64748b;
+            transition: all 0.3s ease;
+            border-radius: 10px;
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            position: relative;
+            font-size: 0.85rem;
+        }
+
+        .sidebar-link:hover {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .sidebar-link.active {
+            color: #34d399;
+            background: rgba(52, 211, 153, 0.1);
+        }
+
+        .sidebar-link.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 3px;
+            height: 24px;
+            background: #34d399;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .badge-nav {
+            font-size: 9px;
+            padding: 2px 8px;
+            border-radius: 20px;
+            margin-left: auto;
+        }
+
+        /* Main Content */
+        .main-wrapper {
+            margin-left: 60px;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        @media (min-width: 1024px) {
+            .main-wrapper {
+                margin-left: 220px;
+            }
+        }
+
+        /* Header */
+        .header-fixed {
+            flex-shrink: 0;
+            padding: 10px 20px 6px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        /* Dashboard Content */
+        .dashboard-content {
+            flex: 1;
+            overflow: hidden;
+            padding: 8px 20px 10px 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+            gap: 8px;
+            height: 100%;
+            min-height: 0;
+        }
+
+        .metrics-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .middle-row {
+            display: grid;
+            grid-template-columns: 1.6fr 1fr;
+            gap: 8px;
+            min-height: 0;
+            flex: 1;
+        }
+
+        .status-trend-col {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            min-height: 0;
+        }
+
+        .status-trend-col .card-premium {
+            flex: 1;
+            min-height: 0;
+        }
+
+        .status-trend-col .card-premium:first-child {
+            flex: 1.2;
+        }
+
+        .status-trend-col .card-premium:last-child {
+            flex: 1;
+        }
+
+        /* Card */
+        .card-premium {
+            background: rgba(20, 30, 50, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            border-radius: 14px;
+            padding: 12px 14px;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .card-premium:hover {
+            border-color: rgba(52, 211, 153, 0.15);
+        }
+
+        /* Metric Value */
+        .metric-value {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: -0.5px;
+            line-height: 1.2;
+        }
+
+        .metric-label {
+            color: #94a3b8;
+            font-size: 0.6rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-weight: 600;
+        }
+
+        /* Badges */
+        .badge-green {
+            background: rgba(52, 211, 153, 0.15);
+            color: #34d399;
+            border: 1px solid rgba(52, 211, 153, 0.1);
+        }
+        .badge-yellow {
+            background: rgba(251, 191, 36, 0.15);
+            color: #fbbf24;
+            border: 1px solid rgba(251, 191, 36, 0.1);
+        }
+        .badge-red {
+            background: rgba(248, 113, 113, 0.15);
+            color: #f87171;
+            border: 1px solid rgba(248, 113, 113, 0.1);
+        }
+        .badge-blue {
+            background: rgba(96, 165, 250, 0.15);
+            color: #60a5fa;
+            border: 1px solid rgba(96, 165, 250, 0.1);
+        }
+        .badge-purple {
+            background: rgba(167, 139, 250, 0.15);
+            color: #a78bfa;
+            border: 1px solid rgba(167, 139, 250, 0.1);
+        }
+        .badge-gray {
+            background: rgba(255, 255, 255, 0.05);
+            color: #94a3b8;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* Progress Bar */
+        .progress-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 99px;
+            height: 4px;
+            overflow: hidden;
+            margin-top: 4px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 99px;
+            transition: width 0.6s ease;
+        }
+        .progress-fill.green {
+            background: linear-gradient(90deg, #34d399, #10b981);
+        }
+        .progress-fill.blue {
+            background: linear-gradient(90deg, #60a5fa, #3b82f6);
+        }
+        .progress-fill.indigo {
+            background: linear-gradient(90deg, #818cf8, #6366f1);
+        }
+        .progress-fill.yellow {
+            background: linear-gradient(90deg, #fbbf24, #f59e0b);
+        }
+        .progress-fill.purple {
+            background: linear-gradient(90deg, #a78bfa, #8b5cf6);
+        }
+
+        /* Status Dot */
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            flex-shrink: 0;
+        }
+        .status-dot.online {
+            background: #34d399;
+            box-shadow: 0 0 12px rgba(52, 211, 153, 0.4);
+            animation: pulse-dot 2s ease-in-out infinite;
+        }
+        .status-dot.offline {
+            background: #f87171;
+        }
+        @keyframes pulse-dot {
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.5;
+                transform: scale(0.85);
+            }
+        }
+
+        /* Buttons */
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            color: #cbd5e1;
+            padding: 5px 12px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            cursor: pointer;
+            font-size: 0.7rem;
+        }
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #34d399, #10b981);
+            color: #0a0e1a;
+            font-weight: 600;
+            padding: 5px 14px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 0.7rem;
+        }
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(52, 211, 153, 0.2);
+        }
+
+        .btn-danger {
+            background: rgba(248, 113, 113, 0.12);
+            color: #f87171;
+            padding: 4px 10px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(248, 113, 113, 0.1);
+            cursor: pointer;
+            font-size: 0.65rem;
+        }
+        .btn-danger:hover {
+            background: rgba(248, 113, 113, 0.2);
+        }
+
+        /* Chart Container */
+        .chart-wrapper {
+            flex: 1;
+            min-height: 0;
+            position: relative;
+        }
+
+        .chart-wrapper canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        /* Log */
+        .log-container-dash {
+            flex: 1;
+            min-height: 0;
+            max-height: 50px;
+            overflow-y: auto;
+        }
+        .log-container-dash::-webkit-scrollbar {
+            width: 3px;
+        }
+        .log-container-dash::-webkit-scrollbar-thumb {
+            background: rgba(52, 211, 153, 0.2);
+            border-radius: 99px;
+        }
+
+        /* Page Content */
+        .page-content {
+            display: none;
+            height: 100%;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .page-content.active {
+            display: flex;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 10px;
+            background: rgba(20, 30, 50, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            color: #e2e8f0;
+            font-size: 0.8rem;
+            max-width: 340px;
+            z-index: 999;
+            transform: translateY(120px);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        .toast.success {
+            border-left: 4px solid #34d399;
+        }
+        .toast.error {
+            border-left: 4px solid #f87171;
+        }
+        .toast.warning {
+            border-left: 4px solid #fbbf24;
+        }
+        .toast.info {
+            border-left: 4px solid #60a5fa;
+        }
+
+        /* Glow */
+        .glow-green {
+            text-shadow: 0 0 30px rgba(52, 211, 153, 0.15);
+        }
+        .glow-blue {
+            text-shadow: 0 0 30px rgba(96, 165, 250, 0.15);
+        }
+        .glow-indigo {
+            text-shadow: 0 0 30px rgba(129, 140, 248, 0.15);
+        }
+        .glow-yellow {
+            text-shadow: 0 0 30px rgba(251, 191, 36, 0.15);
+        }
+        .glow-purple {
+            text-shadow: 0 0 30px rgba(167, 139, 250, 0.15);
+        }
+
+        /* Ring Efisiensi */
+        .ring-container {
+            position: relative;
+            width: 70px;
+            height: 70px;
+            flex-shrink: 0;
+        }
+        .ring-container svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        @media (min-width: 1024px) {
+            .ring-container {
+                width: 85px;
+                height: 85px;
+            }
+        }
+
+        /* Status info */
+        .status-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2px 12px;
+            font-size: 0.65rem;
+            flex: 1;
+        }
+        .status-info .label {
+            color: #94a3b8;
+        }
+        .status-info .value {
+            color: #ffffff;
+            font-weight: 500;
+            text-align: right;
+        }
+
+        /* Trend */
+        .trend-chart-wrapper {
+            flex: 1;
+            min-height: 0;
+            position: relative;
+            margin-top: 2px;
+        }
+        .trend-chart-wrapper canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        .trend-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+        .trend-stats .stat-item {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 6px;
+            padding: 3px 6px;
+            text-align: center;
+        }
+        .trend-stats .stat-item .stat-value {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #ffffff;
+        }
+        .trend-stats .stat-item .stat-label {
+            font-size: 0.55rem;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        /* Tables */
+        .table-premium th {
+            color: #64748b;
+            font-weight: 600;
+            font-size: 0.55rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            padding: 6px 8px;
+        }
+        .table-premium td {
+            padding: 6px 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+            color: #e2e8f0;
+            font-size: 0.75rem;
+        }
+        .table-premium tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        /* Page containers */
+        .page-history-content,
+        .page-full {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px 0;
+        }
+        .page-history-content::-webkit-scrollbar,
+        .page-full::-webkit-scrollbar {
+            width: 4px;
+        }
+        .page-history-content::-webkit-scrollbar-thumb,
+        .page-full::-webkit-scrollbar-thumb {
+            background: rgba(52, 211, 153, 0.2);
+            border-radius: 99px;
+        }
+
+        .page-history-content .table-wrap {
+            flex: 1;
+            overflow-y: auto;
+            min-height: 0;
+        }
+
+        /* User management */
+        .user-list .user-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .user-list .user-item:hover {
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        /* Modal overlay */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            z-index: 999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-box {
+            background: rgba(20, 30, 50, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 16px;
+            padding: 24px;
+            max-width: 480px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6);
+            animation: modalIn 0.3s ease;
+        }
+
+        @keyframes modalIn {
+            from {
+                transform: scale(0.9) translateY(20px);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1) translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-box input,
+        .modal-box select {
+            width: 100%;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            color: #e2e8f0;
+            font-size: 0.85rem;
+            outline: none;
+            transition: border 0.3s ease;
+        }
+
+        .modal-box input:focus,
+        .modal-box select:focus {
+            border-color: rgba(52, 211, 153, 0.4);
+        }
+
+        .modal-box input::placeholder {
+            color: #64748b;
+        }
+
+        .modal-box input[type="color"] {
+            padding: 2px;
+            height: 40px;
+            cursor: pointer;
+        }
+
+        /* Device item */
+        .device-item {
+            transition: all 0.2s ease;
+        }
+        .device-item:hover {
+            background: rgba(255, 255, 255, 0.08) !important;
+        }
+
+        /* Login Overlay */
+        .login-overlay {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(135deg, #0a0e1a 0%, #1a1a2e 50%, #16213e 100%);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-overlay.hidden {
+            display: none;
+        }
+
+        .login-box {
+            background: rgba(20, 30, 50, 0.9);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 20px;
+            padding: 40px 36px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6);
+        }
+
+        .login-box input {
+            width: 100%;
+            padding: 10px 14px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            color: #e2e8f0;
+            font-size: 0.9rem;
+            outline: none;
+            transition: border 0.3s ease;
+        }
+
+        .login-box input:focus {
+            border-color: rgba(52, 211, 153, 0.4);
+        }
+
+        .login-box input::placeholder {
+            color: #64748b;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .metrics-row {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 5px;
+            }
+            .middle-row {
+                grid-template-columns: 1fr;
+                gap: 5px;
+            }
+            .status-trend-col {
+                flex-direction: row;
+                gap: 5px;
+            }
+            .status-trend-col .card-premium {
+                flex: 1;
+            }
+            .metric-value {
+                font-size: 1.2rem;
+            }
+            .sidebar {
+                width: 50px;
+            }
+            .sidebar-text {
+                display: none !important;
+            }
+            .main-wrapper {
+                margin-left: 50px;
+            }
+            .header-fixed {
+                padding: 6px 10px;
+            }
+            .dashboard-content {
+                padding: 5px 10px 6px 10px;
+            }
+            .card-premium {
+                padding: 8px 10px;
+            }
+            .ring-container {
+                width: 55px;
+                height: 55px;
+            }
+            .status-info {
+                font-size: 0.55rem;
+                gap: 1px 8px;
+            }
+            .trend-stats .stat-item .stat-value {
+                font-size: 0.65rem;
+            }
+            .hide-mobile {
+                display: none !important;
+            }
+            .login-box {
+                padding: 24px 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .metrics-row {
+                grid-template-columns: 1fr 1fr;
+                gap: 4px;
+            }
+            .metric-value {
+                font-size: 1rem;
+            }
+            .card-premium {
+                padding: 5px 7px;
+                border-radius: 10px;
+            }
+            .status-trend-col {
+                flex-direction: column;
+            }
+            .ring-container {
+                width: 45px;
+                height: 45px;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .metric-value {
+                font-size: 2rem;
+            }
+            .card-premium {
+                padding: 14px 18px;
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(52, 211, 153, 0.2);
+            border-radius: 99px;
+        }
+
+        /* Slider custom style */
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            background: rgba(255, 255, 255, 0.1);
+            height: 6px;
+            border-radius: 99px;
+            outline: none;
+            transition: background 0.2s ease;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #34d399;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(52, 211, 153, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #34d399;
+            cursor: pointer;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ============================================================ -->
+    <!-- LOGIN OVERLAY -->
+    <!-- ============================================================ -->
+    <div class="login-overlay" id="loginOverlay">
+        <div class="login-box">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-400 to-green-600 flex items-center justify-center mx-auto shadow-lg shadow-green-500/20">
+                    <i class="fas fa-solar-panel text-white text-2xl"></i>
+                </div>
+                <h1 class="text-2xl font-bold text-white mt-3">SolarWatch Pro</h1>
+                <p class="text-gray-400 text-sm">Monitoring Panel Surya Premium</p>
+            </div>
+
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="mb-3">
+                    <label class="text-gray-400 text-sm">Username</label>
+                    <input type="text" id="loginUsername" value="admin" placeholder="Masukkan username" required />
+                </div>
+                <div class="mb-4">
+                    <label class="text-gray-400 text-sm">Password</label>
+                    <input type="password" id="loginPassword" value="admin123" placeholder="Masukkan password" required />
+                </div>
+                <button type="submit" class="btn-primary w-full py-2.5 text-sm">
+                    <i class="fas fa-sign-in-alt mr-2"></i> Masuk
+                </button>
+                <p class="text-center text-gray-500 text-xs mt-3">
+                    Default: admin / admin123
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- SIDEBAR -->
+    <!-- ============================================================ -->
+    <aside class="sidebar w-14 lg:w-56" id="sidebar">
+        <div class="p-2 lg:p-4">
+
+            <!-- Logo -->
+            <div class="flex items-center gap-2 lg:gap-3 mb-4 lg:mb-6">
+                <div class="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-green-600 flex items-center justify-center shadow-lg shadow-green-500/20 flex-shrink-0">
+                    <i class="fas fa-solar-panel text-white text-sm lg:text-base"></i>
+                </div>
+                <div class="hidden lg:block">
+                    <h1 class="text-lg font-bold text-white tracking-tight">SolarWatch</h1>
+                    <p class="text-[8px] text-emerald-400 font-medium">Premium v3.0</p>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <nav class="space-y-0.5">
+                <div class="sidebar-link active" data-page="dashboard" onclick="navigateTo('dashboard')">
+                    <i class="fas fa-gauge-high text-sm w-5 text-center"></i>
+                    <span class="sidebar-text hidden lg:inline">Dashboard</span>
+                    <span class="badge-nav bg-emerald-500/20 text-emerald-400 hidden lg:inline">Live</span>
+                </div>
+
+                <div class="sidebar-link" data-page="analytics" onclick="navigateTo('analytics')">
+                    <i class="fas fa-chart-pie text-sm w-5 text-center"></i>
+                    <span class="sidebar-text hidden lg:inline">Analytics</span>
+                    <span class="badge-nav bg-blue-500/20 text-blue-400 hidden lg:inline">Pro</span>
+                </div>
+
+                <div class="sidebar-link" data-page="devices" onclick="navigateTo('devices')">
+                    <i class="fas fa-microchip text-sm w-5 text-center"></i>
+                    <span class="sidebar-text hidden lg:inline">Devices</span>
+                    <span class="badge-nav bg-blue-500/20 text-blue-400 hidden lg:inline" id="deviceBadge">6</span>
+                </div>
+
+                <div class="sidebar-link" data-page="history" onclick="navigateTo('history')">
+                    <i class="fas fa-clock-rotate-left text-sm w-5 text-center"></i>
+                    <span class="sidebar-text hidden lg:inline">History</span>
+                </div>
+
+                <div class="sidebar-link" data-page="alerts" onclick="navigateTo('alerts')">
+                    <i class="fas fa-bell text-sm w-5 text-center"></i>
+                    <span class="sidebar-text hidden lg:inline">Alerts</span>
+                    <span class="badge-nav bg-red-500/20 text-red-400 hidden lg:inline">3</span>
+                </div>
+
+                <div class="sidebar-link" data-page="settings" onclick="navigateTo('settings')">
+                    <i class="fas fa-gear text-sm w-5 text-center"></i>
+                    <span class="sidebar-text hidden lg:inline">Settings</span>
+                </div>
+
+                <div class="sidebar-link" data-page="users" onclick="navigateTo('users')">
+                    <i class="fas fa-users text-sm w-5 text-center"></i>
+                    <span class="sidebar-text hidden lg:inline">Users</span>
+                    <span class="badge-nav bg-purple-500/20 text-purple-400 hidden lg:inline" id="userCount">1</span>
+                </div>
+            </nav>
+
+            <!-- Profile & Logout -->
+            <div class="absolute bottom-2 left-2 right-2 lg:bottom-3 lg:left-4 lg:right-4">
+                <div class="flex items-center gap-2 px-2 py-1.5 lg:px-3 lg:py-2 rounded-xl bg-white/5 border border-white/5">
+                    <div class="w-6 h-6 lg:w-8 lg:h-8 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center text-white font-bold text-[8px] lg:text-xs flex-shrink-0">
+                        AD
+                    </div>
+                    <div class="hidden lg:block flex-1 min-w-0">
+                        <p class="text-sm font-medium text-white truncate" id="userDisplay">Admin</p>
+                        <p class="text-[8px] text-gray-400 truncate" id="userEmailDisplay">admin@solarwatch.id</p>
+                    </div>
+                    <button onclick="handleLogout()" class="text-gray-500 hover:text-red-400 transition text-xs cursor-pointer" title="Logout">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ============================================================ -->
+    <!-- MAIN WRAPPER -->
+    <!-- ============================================================ -->
+    <div class="main-wrapper" id="mainWrapper">
+
+        <!-- HEADER -->
+        <header class="header-fixed flex flex-wrap items-center justify-between gap-2">
+            <div>
+                <h2 class="text-lg sm:text-xl font-bold text-white" id="pageTitle">Dashboard Overview</h2>
+                <p class="text-gray-400 text-xs flex items-center gap-2 mt-0.5">
+                    <span class="status-dot online"></span>
+                    <span id="headerStatus">Sistem berjalan normal</span>
+                    <span class="text-gray-600">·</span>
+                    <span class="text-gray-500 text-[10px]" id="headerTime">--</span>
+                </p>
+            </div>
+
+            <div class="flex items-center gap-1.5 flex-wrap">
+                <div class="flex items-center gap-1.5 bg-slate-800/60 border border-white/5 rounded-lg px-2.5 py-1">
+                    <span class="status-dot online" id="mqttDot"></span>
+                    <span class="text-[10px] text-gray-300" id="mqttStatus">Connected</span>
+                    <span class="w-px h-3 bg-white/10"></span>
+                    <span class="text-[9px] text-gray-500" id="mqttLatency">12ms</span>
+                </div>
+
+                <button class="btn-secondary text-[10px] flex items-center gap-1" onclick="globalRefresh()">
+                    <i class="fas fa-rotate-right"></i> Refresh
+                </button>
+                <button class="btn-secondary text-[10px] flex items-center gap-1" onclick="exportData()">
+                    <i class="fas fa-download"></i> Export
+                </button>
+                <button class="btn-secondary text-[10px] flex items-center gap-1" onclick="window.print()">
+                    <i class="fas fa-print"></i> Print
+                </button>
+            </div>
+        </header>
+
+        <!-- ============================================================ -->
+        <!-- PAGE: DASHBOARD -->
+        <!-- ============================================================ -->
+        <div id="page-dashboard" class="page-content active">
+            <div class="dashboard-content">
+
+                <div class="dashboard-grid">
+
+                    <!-- ROW 1: METRIK -->
+                    <div class="metrics-row">
+                        <div class="card-premium">
+                            <div class="flex items-start justify-between">
+                                <div>
+                                    <p class="metric-label">Daya</p>
+                                    <p class="metric-value glow-green" id="powerValue">0.0</p>
+                                    <p class="text-[9px] text-gray-500">Watt</p>
+                                </div>
+                                <div class="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400 text-sm">
+                                    <i class="fas fa-bolt"></i>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2 mt-1">
+                                <span class="text-[9px] px-1.5 py-0.5 rounded-full badge-green" id="powerTrend">
+                                    <i class="fas fa-arrow-up mr-0.5"></i> 12.5%
+                                </span>
+                                <span class="text-[8px] text-gray-500">vs kemarin</span>
+                            </div>
+                            <div class="progress-track">
+                                <div class="progress-fill green" id="powerBar" style="width:0%"></div>
+                            </div>
+                        </div>
+
+                        <div class="card-premium">
+                            <div class="flex items-start justify-between">
+                                <div>
+                                    <p class="metric-label">Tegangan</p>
+                                    <p class="metric-value glow-blue" id="voltageValue">0.0</p>
+                                    <p class="text-[9px] text-gray-500">Volt</p>
+                                </div>
+                                <div class="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-400 text-sm">
+                                    <i class="fas fa-bolt"></i>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2 mt-1">
+                                <span class="text-[9px] px-1.5 py-0.5 rounded-full badge-blue" id="voltageTrend">
+                                    <i class="fas fa-arrow-up mr-0.5"></i> 3.2%
+                                </span>
+                                <span class="text-[8px] text-gray-500">vs kemarin</span>
+                            </div>
+                            <div class="progress-track">
+                                <div class="progress-fill blue" id="voltageBar" style="width:0%"></div>
+                            </div>
+                        </div>
+
+                        <div class="card-premium">
+                            <div class="flex items-start justify-between">
+                                <div>
+                                    <p class="metric-label">Arus</p>
+                                    <p class="metric-value glow-indigo" id="currentValue">0.00</p>
+                                    <p class="text-[9px] text-gray-500">Ampere</p>
+                                </div>
+                                <div class="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center text-indigo-400 text-sm">
+                                    <i class="fas fa-water"></i>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2 mt-1">
+                                <span class="text-[9px] px-1.5 py-0.5 rounded-full badge-blue" id="currentTrend">
+                                    <i class="fas fa-minus mr-0.5"></i> 0.0%
+                                </span>
+                                <span class="text-[8px] text-gray-500">vs kemarin</span>
+                            </div>
+                            <div class="progress-track">
+                                <div class="progress-fill indigo" id="currentBar" style="width:0%"></div>
+                            </div>
+                        </div>
+
+                        <div class="card-premium">
+                            <div class="flex items-start justify-between">
+                                <div>
+                                    <p class="metric-label">Energi Hari Ini</p>
+                                    <p class="metric-value glow-yellow" id="energyValue">0.00</p>
+                                    <p class="text-[9px] text-gray-500">kWh</p>
+                                </div>
+                                <div class="w-8 h-8 rounded-lg bg-yellow-500/20 flex items-center justify-center text-yellow-400 text-sm">
+                                    <i class="fas fa-sun"></i>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2 mt-1">
+                                <span class="text-[9px] px-1.5 py-0.5 rounded-full badge-yellow" id="energyTrend">
+                                    <i class="fas fa-arrow-up mr-0.5"></i> 18.7%
+                                </span>
+                                <span class="text-[8px] text-gray-500">vs kemarin</span>
+                            </div>
+                            <div class="progress-track">
+                                <div class="progress-fill yellow" id="energyBar" style="width:0%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ROW 2: CHART + STATUS + TREND -->
+                    <div class="middle-row">
+
+                        <!-- Chart -->
+                        <div class="card-premium">
+                            <div class="flex items-center justify-between mb-1 flex-shrink-0">
+                                <div>
+                                    <h3 class="text-white font-semibold text-sm">Performansi Panel</h3>
+                                    <p class="text-[8px] text-gray-500">Real-time · 24 jam terakhir</p>
+                                </div>
+                                <div class="flex gap-2 text-[8px]">
+                                    <span class="flex items-center gap-1 text-gray-400">
+                                        <span class="w-2 h-0.5 bg-emerald-400"></span> Daya
+                                    </span>
+                                    <span class="flex items-center gap-1 text-gray-400">
+                                        <span class="w-2 h-0.5 bg-blue-400"></span> Teg
+                                    </span>
+                                    <span class="flex items-center gap-1 text-gray-400">
+                                        <span class="w-2 h-0.5 bg-yellow-400"></span> Cahaya
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="chart-wrapper">
+                                <canvas id="mainChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Status + Trend -->
+                        <div class="status-trend-col">
+
+                            <!-- Status Panel -->
+                            <div class="card-premium">
+                                <div class="flex items-center justify-between mb-1 flex-shrink-0">
+                                    <h3 class="text-white font-semibold text-sm">Status Panel</h3>
+                                    <span class="text-[9px] px-2 py-0.5 rounded-full badge-green" id="statusBadge">Optimal</span>
+                                </div>
+
+                                <div class="flex items-center gap-3 flex-1 min-h-0">
+                                    <div class="ring-container">
+                                        <svg viewBox="0 0 120 120">
+                                            <circle cx="60" cy="60" r="50" stroke="rgba(255,255,255,0.05)" stroke-width="9" fill="none"/>
+                                            <circle cx="60" cy="60" r="50" stroke="url(#effGrad)" stroke-width="9" fill="none"
+                                                stroke-dasharray="0 314" stroke-linecap="round" id="effRing"/>
+                                            <defs>
+                                                <linearGradient id="effGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                                                    <stop offset="0%" style="stop-color:#34d399"/>
+                                                    <stop offset="100%" style="stop-color:#60a5fa"/>
+                                                </linearGradient>
+                                            </defs>
+                                        </svg>
+                                        <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                            <span class="text-base lg:text-lg font-bold text-white" id="effValue">0%</span>
+                                            <span class="text-[5px] text-gray-500">Efisiensi</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="status-info">
+                                        <span class="label">Suhu Panel</span>
+                                        <span class="value" id="tempVal">--</span>
+                                        <span class="label">Intensitas</span>
+                                        <span class="value" id="lightVal">--</span>
+                                        <span class="label">Baterai</span>
+                                        <span class="value" id="battVal">--</span>
+                                        <span class="label">Kinerja</span>
+                                        <span class="value" id="perfVal">--</span>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-3 gap-1.5 mt-1 flex-shrink-0">
+                                    <button class="btn-secondary text-[9px] flex flex-col items-center py-1" onclick="globalRefresh()">
+                                        <i class="fas fa-rotate-right text-[10px]"></i> Refresh
+                                    </button>
+                                    <button class="btn-secondary text-[9px] flex flex-col items-center py-1" onclick="exportData()">
+                                        <i class="fas fa-download text-[10px]"></i> Export
+                                    </button>
+                                    <button class="btn-secondary text-[9px] flex flex-col items-center py-1" onclick="window.print()">
+                                        <i class="fas fa-print text-[10px]"></i> Print
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Trend Performa -->
+                            <div class="card-premium">
+                                <div class="flex items-center justify-between mb-0.5 flex-shrink-0">
+                                    <h3 class="text-white font-semibold text-sm">📈 Trend Performa</h3>
+                                    <span class="text-[8px] text-gray-500">7 hari terakhir</span>
+                                </div>
+
+                                <div class="trend-chart-wrapper">
+                                    <canvas id="trendChart"></canvas>
+                                </div>
+
+                                <div class="trend-stats mt-1 flex-shrink-0">
+                                    <div class="stat-item">
+                                        <div class="stat-value text-emerald-400" id="trendAvg">0.0</div>
+                                        <div class="stat-label">Rata-rata</div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div class="stat-value text-blue-400" id="trendPeak">0.0</div>
+                                        <div class="stat-label">Puncak</div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div class="stat-value text-yellow-400" id="trendMin">0.0</div>
+                                        <div class="stat-label">Terendah</div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div class="stat-value text-purple-400" id="trendChange">+0%</div>
+                                        <div class="stat-label">Perubahan</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <!-- ROW 3: LOG -->
+                    <div class="card-premium" style="flex-shrink:0; max-height:75px; padding:6px 14px;">
+                        <div class="flex items-center justify-between mb-0.5 flex-shrink-0">
+                            <div>
+                                <h3 class="text-white font-semibold text-[10px]">Log Aktivitas</h3>
+                            </div>
+                            <button class="btn-danger text-[8px] flex items-center gap-1" onclick="clearLogs()">
+                                <i class="fas fa-trash"></i> Hapus
+                            </button>
+                        </div>
+                        <div class="log-container-dash" id="logContainer"></div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- PAGE: ANALYTICS -->
+        <!-- ============================================================ -->
+        <div id="page-analytics" class="page-content">
+            <div class="page-full">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+
+                    <div class="card-premium">
+                        <h3 class="text-white font-semibold text-sm mb-2">📊 Statistik Performa</h3>
+                        <div class="space-y-1.5 text-sm">
+                            <div class="flex justify-between"><span class="text-gray-400">Rata-rata Daya</span><span class="text-white font-medium" id="avgPower">-- W</span></div>
+                            <div class="flex justify-between"><span class="text-gray-400">Puncak Daya</span><span class="text-white font-medium" id="peakPower">-- W</span></div>
+                            <div class="flex justify-between"><span class="text-gray-400">Total Energi</span><span class="text-white font-medium" id="totalEnergy">-- kWh</span></div>
+                            <div class="flex justify-between"><span class="text-gray-400">Efisiensi Rata-rata</span><span class="text-white font-medium" id="avgEff">--%</span></div>
+                            <div class="flex justify-between"><span class="text-gray-400">Waktu Operasi</span><span class="text-white font-medium" id="opTime">-- jam</span></div>
+                        </div>
+                        <button class="btn-primary w-full mt-3 text-sm" onclick="openAnalyticsDetail()">
+                            <i class="fas fa-chart-simple mr-2"></i> Lihat Analisis Lengkap
+                        </button>
+                    </div>
+
+                    <div class="card-premium">
+                        <h3 class="text-white font-semibold text-sm mb-2">📈 Tren Performa</h3>
+                        <div style="height:140px;">
+                            <canvas id="analyticsChart"></canvas>
+                        </div>
+                        <div class="grid grid-cols-3 gap-1.5 mt-2">
+                            <button class="btn-primary text-[10px] text-center py-1.5" onclick="filterAnalytics('weekly')">Mingguan</button>
+                            <button class="btn-secondary text-[10px] text-center py-1.5" onclick="filterAnalytics('monthly')">Bulanan</button>
+                            <button class="btn-secondary text-[10px] text-center py-1.5" onclick="filterAnalytics('yearly')">Tahunan</button>
+                        </div>
+                        <p class="text-[8px] text-gray-500 text-center mt-1" id="analyticsFilterLabel">Menampilkan: Mingguan</p>
+                    </div>
+
+                    <div class="lg:col-span-2 card-premium">
+                        <h3 class="text-white font-semibold text-sm mb-2">📋 Laporan Performa Hari Ini</h3>
+                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-2">
+                            <div class="bg-white/5 rounded-lg p-2 text-center">
+                                <p class="text-lg font-bold text-emerald-400" id="todayPower">--</p>
+                                <p class="text-[8px] text-gray-500">Daya</p>
+                            </div>
+                            <div class="bg-white/5 rounded-lg p-2 text-center">
+                                <p class="text-lg font-bold text-blue-400" id="todayEnergy">--</p>
+                                <p class="text-[8px] text-gray-500">Energi</p>
+                            </div>
+                            <div class="bg-white/5 rounded-lg p-2 text-center">
+                                <p class="text-lg font-bold text-yellow-400" id="todayPeak">--</p>
+                                <p class="text-[8px] text-gray-500">Puncak</p>
+                            </div>
+                            <div class="bg-white/5 rounded-lg p-2 text-center">
+                                <p class="text-lg font-bold text-purple-400" id="todayEff">--</p>
+                                <p class="text-[8px] text-gray-500">Efisiensi</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- PAGE: DEVICES (Kontrol + Tambah Perangkat) -->
+        <!-- ============================================================ -->
+        <div id="page-devices" class="page-content">
+            <div class="page-full">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+
+                    <!-- Daftar Perangkat -->
+                    <div class="card-premium">
+                        <div class="flex items-center justify-between mb-2 flex-shrink-0">
+                            <div>
+                                <h3 class="text-white font-semibold text-sm">🔌 Perangkat Terhubung</h3>
+                                <p class="text-[8px] text-gray-500" id="deviceCount">0 perangkat</p>
+                            </div>
+                            <button class="btn-primary text-[10px] px-3 py-1.5 flex items-center gap-1" onclick="openAddDeviceModal()">
+                                <i class="fas fa-plus"></i> Tambah
+                            </button>
+                        </div>
+                        <div class="space-y-1.5" id="deviceList">
+                            <!-- Diisi JS -->
+                        </div>
+                    </div>
+
+                    <!-- Kontrol Perangkat -->
+                    <div class="card-premium">
+                        <div class="flex items-center justify-between mb-2 flex-shrink-0">
+                            <h3 class="text-white font-semibold text-sm">⚙️ Kontrol Perangkat</h3>
+                            <span class="text-[8px] text-gray-500" id="deviceOnlineCount">0 online</span>
+                        </div>
+                        <div class="space-y-2" id="deviceControls">
+                            <!-- Diisi JS -->
+                        </div>
+                        <button class="btn-secondary w-full text-xs mt-2" onclick="showToast('info','🔍 Mencari perangkat baru...')">
+                            <i class="fas fa-search mr-1"></i> Scan Perangkat
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- PAGE: HISTORY -->
+        <!-- ============================================================ -->
+        <div id="page-history" class="page-content">
+            <div class="page-history-content">
+                <div class="card-premium" style="flex:1; display:flex; flex-direction:column; min-height:0; padding:12px 16px;">
+
+                    <div class="flex flex-wrap items-center justify-between mb-2 flex-shrink-0">
+                        <div>
+                            <h3 class="text-white font-semibold text-sm">📜 Riwayat Data Lengkap</h3>
+                            <p class="text-[9px] text-gray-500">Semua data historis tersimpan</p>
+                        </div>
+                        <div class="flex gap-1.5 flex-wrap">
+                            <button class="btn-secondary text-[9px]" onclick="exportCSV()">
+                                <i class="fas fa-file-csv mr-0.5"></i> Export CSV
+                            </button>
+                            <button class="btn-danger text-[9px]" onclick="clearAllHistory()">
+                                <i class="fas fa-trash mr-0.5"></i> Hapus Semua
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="table-wrap">
+                        <table class="table-premium w-full">
+                            <thead class="sticky top-0" style="background:rgba(10,14,26,0.95); z-index:5;">
+                                <tr>
+                                    <th class="text-left">Tanggal</th>
+                                    <th class="text-right">Daya (W)</th>
+                                    <th class="text-right">Tegangan (V)</th>
+                                    <th class="text-right">Arus (A)</th>
+                                    <th class="text-right">Cahaya (Lux)</th>
+                                    <th class="text-right">Suhu (°C)</th>
+                                    <th class="text-center">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historyFullBody"></tbody>
+                        </table>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- PAGE: ALERTS -->
+        <!-- ============================================================ -->
+        <div id="page-alerts" class="page-content">
+            <div class="page-full">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+
+                    <div class="card-premium">
+                        <h3 class="text-white font-semibold text-sm mb-2">🔔 Notifikasi Terkini</h3>
+                        <div class="space-y-1.5" id="alertList">
+                            <div class="flex items-start gap-2 p-2 bg-yellow-500/10 rounded-lg border border-yellow-500/10">
+                                <div class="w-6 h-6 rounded-full bg-yellow-500/20 flex items-center justify-center text-yellow-400 text-xs flex-shrink-0">⚠️</div>
+                                <div>
+                                    <p class="text-white text-xs">Efisiensi menurun 7%</p>
+                                    <p class="text-[8px] text-gray-500">Panel perlu dibersihkan · 2 jam lalu</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-2 p-2 bg-blue-500/10 rounded-lg border border-blue-500/10">
+                                <div class="w-6 h-6 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 text-xs flex-shrink-0">ℹ️</div>
+                                <div>
+                                    <p class="text-white text-xs">Produksi energi puncak</p>
+                                    <p class="text-[8px] text-gray-500">34.2 W tercapai · 3 jam lalu</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-2 p-2 bg-green-500/10 rounded-lg border border-green-500/10">
+                                <div class="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center text-green-400 text-xs flex-shrink-0">✅</div>
+                                <div>
+                                    <p class="text-white text-xs">Sistem berjalan normal</p>
+                                    <p class="text-[8px] text-gray-500">Semua sensor online · 5 jam lalu</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-2 p-2 bg-red-500/10 rounded-lg border border-red-500/10">
+                                <div class="w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center text-red-400 text-xs flex-shrink-0">❌</div>
+                                <div>
+                                    <p class="text-white text-xs">Sensor cuaca offline</p>
+                                    <p class="text-[8px] text-gray-500">Periksa koneksi · 8 jam lalu</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-premium">
+                        <h3 class="text-white font-semibold text-sm mb-2">⚙️ Pengaturan Notifikasi</h3>
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between p-2 bg-white/5 rounded-lg">
+                                <div>
+                                    <p class="text-white text-xs">Notifikasi Email</p>
+                                    <p class="text-[8px] text-gray-500">admin@solarwatch.id</p>
+                                </div>
+                                <button class="btn-primary text-[9px] px-3 py-1" onclick="toggleNotification('email')" id="emailNotifBtn">Aktif</button>
+                            </div>
+                            <div class="flex items-center justify-between p-2 bg-white/5 rounded-lg">
+                                <div>
+                                    <p class="text-white text-xs">Notifikasi SMS</p>
+                                    <p class="text-[8px] text-gray-500">+62 812-3456-7890</p>
+                                </div>
+                                <button class="btn-secondary text-[9px] px-3 py-1" onclick="toggleNotification('sms')" id="smsNotifBtn">Nonaktif</button>
+                            </div>
+                            <div class="flex items-center justify-between p-2 bg-white/5 rounded-lg">
+                                <div>
+                                    <p class="text-white text-xs">Notifikasi Push</p>
+                                    <p class="text-[8px] text-gray-500">Aplikasi Mobile</p>
+                                </div>
+                                <button class="btn-primary text-[9px] px-3 py-1" onclick="toggleNotification('push')" id="pushNotifBtn">Aktif</button>
+                            </div>
+                            <button class="btn-primary w-full text-xs mt-1" onclick="openAdvancedSettings()">
+                                <i class="fas fa-sliders-h mr-1"></i> Pengaturan Lanjutan
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- PAGE: SETTINGS -->
+        <!-- ============================================================ -->
+        <div id="page-settings" class="page-content">
+            <div class="page-full">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+
+                    <div class="card-premium">
+                        <h3 class="text-white font-semibold text-sm mb-2">⚙️ Pengaturan Umum</h3>
+                        <div class="space-y-2">
+                            <div>
+                                <label class="text-gray-400 text-xs">Nama Sistem</label>
+                                <input type="text" id="systemName" value="SolarWatch Pro" class="w-full mt-0.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-emerald-500/50">
+                            </div>
+                            <div>
+                                <label class="text-gray-400 text-xs">Broker MQTT</label>
+                                <input type="text" id="mqttBroker" value="wss://broker.emqx.io:8084/mqtt" class="w-full mt-0.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-emerald-500/50">
+                            </div>
+                            <div>
+                                <label class="text-gray-400 text-xs">Interval Update</label>
+                                <select id="updateInterval" class="w-full mt-0.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-emerald-500/50">
+                                    <option value="1">1 detik</option>
+                                    <option value="2" selected>2 detik</option>
+                                    <option value="5">5 detik</option>
+                                    <option value="10">10 detik</option>
+                                </select>
+                            </div>
+                            <button class="btn-primary w-full text-xs" onclick="saveSettings()">
+                                <i class="fas fa-save mr-1"></i> Simpan Pengaturan
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="card-premium">
+                        <h3 class="text-white font-semibold text-sm mb-2">🔐 Keamanan</h3>
+                        <div class="space-y-2">
+                            <div>
+                                <label class="text-gray-400 text-xs">Username</label>
+                                <input type="text" id="securityUsername" value="admin" class="w-full mt-0.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-emerald-500/50">
+                            </div>
+                            <div>
+                                <label class="text-gray-400 text-xs">Password Baru</label>
+                                <input type="password" id="securityPassword" placeholder="Kosongkan jika tidak diubah" class="w-full mt-0.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-emerald-500/50">
+                            </div>
+                            <div>
+                                <label class="text-gray-400 text-xs">API Key</label>
+                                <input type="text" id="apiKey" value="sk_live_xxxxx" class="w-full mt-0.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-emerald-500/50">
+                            </div>
+                            <button class="btn-primary w-full text-xs" onclick="updateSecurity()">
+                                <i class="fas fa-lock mr-1"></i> Perbarui Keamanan
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="lg:col-span-2 card-premium">
+                        <h3 class="text-white font-semibold text-sm mb-2">📊 Tentang Sistem</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                            <div class="bg-white/5 rounded-lg p-2 text-center">
+                                <p class="text-[10px] text-gray-400">Versi</p>
+                                <p class="text-white font-bold text-sm">v3.0.1</p>
+                            </div>
+                            <div class="bg-white/5 rounded-lg p-2 text-center">
+                                <p class="text-[10px] text-gray-400">Terakhir Update</p>
+                                <p class="text-white font-bold text-sm" id="settingsUpdate">--</p>
+                            </div>
+                            <div class="bg-white/5 rounded-lg p-2 text-center">
+                                <p class="text-[10px] text-gray-400">Status</p>
+                                <p class="text-emerald-400 font-bold text-sm"><i class="fas fa-circle text-[6px] mr-1"></i> Stabil</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- PAGE: USERS -->
+        <!-- ============================================================ -->
+        <div id="page-users" class="page-content">
+            <div class="page-full">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+
+                    <div class="card-premium">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="text-white font-semibold text-sm">👥 Daftar User</h3>
+                            <button class="btn-primary text-[10px] px-3 py-1.5" onclick="openAddUserModal()">
+                                <i class="fas fa-plus mr-1"></i> Tambah User
+                            </button>
+                        </div>
+                        <div class="user-list space-y-1.5" id="userList">
+                            <!-- Diisi JS -->
+                        </div>
+                    </div>
+
+                    <div class="card-premium">
+                        <h3 class="text-white font-semibold text-sm mb-2">📋 Manajemen Akses</h3>
+                        <div class="space-y-2">
+                            <div class="p-3 bg-white/5 rounded-lg">
+                                <p class="text-white text-xs font-medium">Total User</p>
+                                <p class="text-2xl font-bold text-emerald-400" id="totalUsers">1</p>
+                            </div>
+                            <div class="p-3 bg-white/5 rounded-lg">
+                                <p class="text-white text-xs font-medium">User Aktif</p>
+                                <p class="text-2xl font-bold text-green-400" id="activeUsers">1</p>
+                            </div>
+                            <div class="p-3 bg-white/5 rounded-lg">
+                                <p class="text-white text-xs font-medium">Terakhir Login</p>
+                                <p class="text-sm text-gray-400" id="lastLogin">Hari ini, 14:30</p>
+                            </div>
+                            <button class="btn-secondary w-full text-xs" onclick="showToast('info','📋 Log akses user...')">
+                                <i class="fas fa-history mr-1"></i> Lihat Log Akses
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- MODAL: Tambah User -->
+    <!-- ============================================================ -->
+    <div class="modal-overlay" id="addUserModal">
+        <div class="modal-box">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-white font-semibold text-lg">👤 Tambah User Baru</h3>
+                <button onclick="closeModal('addUserModal')" class="text-gray-400 hover:text-white transition text-xl">&times;</button>
+            </div>
+            <form id="addUserForm" onsubmit="addUser(event)">
+                <div class="mb-3">
+                    <label class="text-gray-400 text-sm">Username</label>
+                    <input type="text" id="newUsername" placeholder="Masukkan username" required />
+                </div>
+                <div class="mb-3">
+                    <label class="text-gray-400 text-sm">Email</label>
+                    <input type="email" id="newEmail" placeholder="user@example.com" required />
+                </div>
+                <div class="mb-3">
+                    <label class="text-gray-400 text-sm">Password</label>
+                    <input type="password" id="newPassword" placeholder="Minimal 6 karakter" required minlength="6" />
+                </div>
+                <div class="mb-4">
+                    <label class="text-gray-400 text-sm">Role</label>
+                    <select id="newRole">
+                        <option value="admin">Admin</option>
+                        <option value="operator" selected>Operator</option>
+                        <option value="viewer">Viewer</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-primary w-full py-2 text-sm">
+                    <i class="fas fa-user-plus mr-2"></i> Tambah User
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- MODAL: Tambah Perangkat -->
+    <!-- ============================================================ -->
+    <div class="modal-overlay" id="addDeviceModal">
+        <div class="modal-box">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-white font-semibold text-lg">🛠️ Tambah Perangkat Kontrol</h3>
+                <button onclick="closeModal('addDeviceModal')" class="text-gray-400 hover:text-white transition text-xl">&times;</button>
+            </div>
+            <form id="addDeviceForm" onsubmit="addDevice(event)">
+                <div class="mb-3">
+                    <label class="text-gray-400 text-sm">Nama Perangkat</label>
+                    <input type="text" id="newDeviceName" placeholder="Contoh: Lampu Gudang" required />
+                </div>
+                <div class="mb-3">
+                    <label class="text-gray-400 text-sm">Tipe Perangkat</label>
+                    <select id="newDeviceType" required>
+                        <option value="switch">Switch (ON/OFF)</option>
+                        <option value="toggle">Toggle (Aktif/Nonaktif)</option>
+                        <option value="button">Button (Momentary)</option>
+                        <option value="slider">Slider (Nilai 0-100)</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="text-gray-400 text-sm">MQTT Topic</label>
+                    <input type="text" id="newDeviceTopic" placeholder="solarwatch/device/namadevice" required />
+                </div>
+                <div class="mb-3">
+                    <label class="text-gray-400 text-sm">Icon (FontAwesome)</label>
+                    <input type="text" id="newDeviceIcon" placeholder="fa-lightbulb" value="fa-microchip" />
+                </div>
+                <div class="mb-3">
+                    <label class="text-gray-400 text-sm">Warna (Hex)</label>
+                    <input type="color" id="newDeviceColor" value="#34d399" class="w-12 h-10 rounded-lg cursor-pointer" />
+                </div>
+                <div class="mb-3 flex items-center gap-3">
+                    <label class="text-gray-400 text-sm">Status Awal:</label>
+                    <select id="newDeviceStatus" class="flex-1">
+                        <option value="online">Online</option>
+                        <option value="offline">Offline</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-primary w-full py-2 text-sm">
+                    <i class="fas fa-plus-circle mr-2"></i> Tambah Perangkat
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- MODAL: Analisis Lengkap -->
+    <!-- ============================================================ -->
+    <div class="modal-overlay" id="analyticsDetailModal">
+        <div class="modal-box" style="max-width:700px;">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-white font-semibold text-lg">📊 Analisis Performa Lengkap</h3>
+                <button onclick="closeModal('analyticsDetailModal')" class="text-gray-400 hover:text-white transition text-xl">&times;</button>
+            </div>
+            <div style="height:250px;">
+                <canvas id="analyticsDetailChart"></canvas>
+            </div>
+            <div class="grid grid-cols-3 gap-2 mt-3">
+                <div class="bg-white/5 rounded-lg p-2 text-center">
+                    <p class="text-sm font-bold text-emerald-400" id="detailAvg">--</p>
+                    <p class="text-[8px] text-gray-500">Rata-rata</p>
+                </div>
+                <div class="bg-white/5 rounded-lg p-2 text-center">
+                    <p class="text-sm font-bold text-blue-400" id="detailPeak">--</p>
+                    <p class="text-[8px] text-gray-500">Puncak</p>
+                </div>
+                <div class="bg-white/5 rounded-lg p-2 text-center">
+                    <p class="text-sm font-bold text-yellow-400" id="detailTotal">--</p>
+                    <p class="text-[8px] text-gray-500">Total Energi</p>
+                </div>
+            </div>
+            <button class="btn-secondary w-full mt-3 text-xs" onclick="closeModal('analyticsDetailModal')">Tutup</button>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- MODAL: Pengaturan Lanjutan -->
+    <!-- ============================================================ -->
+    <div class="modal-overlay" id="advancedSettingsModal">
+        <div class="modal-box">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-white font-semibold text-lg">⚙️ Pengaturan Lanjutan</h3>
+                <button onclick="closeModal('advancedSettingsModal')" class="text-gray-400 hover:text-white transition text-xl">&times;</button>
+            </div>
+            <div class="space-y-3">
+                <div>
+                    <label class="text-gray-400 text-sm">Ambang Batas Daya Minimum</label>
+                    <input type="number" id="thresholdMin" value="5" class="w-full mt-0.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs" />
+                </div>
+                <div>
+                    <label class="text-gray-400 text-sm">Ambang Batas Daya Maksimum</label>
+                    <input type="number" id="thresholdMax" value="45" class="w-full mt-0.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs" />
+                </div>
+                <div>
+                    <label class="text-gray-400 text-sm">Email Penerima Notifikasi</label>
+                    <input type="email" id="notifEmail" value="admin@solarwatch.id" class="w-full mt-0.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs" />
+                </div>
+                <div>
+                    <label class="text-gray-400 text-sm">Nomor WhatsApp</label>
+                    <input type="text" id="notifWhatsapp" value="6281234567890" class="w-full mt-0.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs" />
+                </div>
+                <button class="btn-primary w-full text-sm" onclick="saveAdvancedSettings()">
+                    <i class="fas fa-save mr-2"></i> Simpan Pengaturan
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- TOAST -->
+    <!-- ============================================================ -->
+    <div id="toast" class="toast">
+        <span id="toastMessage">Notifikasi</span>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- JAVASCRIPT -->
+    <!-- ============================================================ -->
+    <script>
+        // ============================================================
+        // 1. DATA & STATE
+        // ============================================================
+
+        // User data (disimpan di localStorage)
+        let users = JSON.parse(localStorage.getItem('solarwatch_users')) || [
+            { id: 1, username: 'admin', email: 'admin@solarwatch.id', password: 'admin123', role: 'admin' }
+        ];
+
+        let currentUser = JSON.parse(sessionStorage.getItem('solarwatch_current_user')) || null;
+
+        // Device states
+        let deviceStates = {
+            pump: { status: 'Aktif', active: true },
+            fan: { status: 'Otomatis', active: true },
+            light: { status: 'Mati', active: false },
+        };
+
+        // Notification states
+        let notifStates = {
+            email: true,
+            sms: false,
+            push: true,
+        };
+
+        // History data
+        let historyData = [];
+        let historyCounter = 0;
+
+        // ============================================================
+        // 2. DATA PERANGKAT KONTROL (disimpan di localStorage)
+        // ============================================================
+
+        let customDevices = JSON.parse(localStorage.getItem('solarwatch_devices')) || [
+            { id: 'pump', name: 'Pompa Irigasi', type: 'switch', topic: 'solarwatch/device/pump', icon: 'fa-water',
+                color: '#34d399', status: 'online', state: true, stateLabel: 'Aktif' },
+            { id: 'fan', name: 'Kipas Pendingin', type: 'toggle', topic: 'solarwatch/device/fan', icon: 'fa-fan',
+                color: '#fbbf24', status: 'online', state: true, stateLabel: 'Otomatis' },
+            { id: 'light', name: 'Pencahayaan', type: 'switch', topic: 'solarwatch/device/light', icon: 'fa-lightbulb',
+                color: '#f59e0b', status: 'online', state: false, stateLabel: 'Mati' }
+        ];
+
+        // ============================================================
+        // 3. FUNGSI UTILITY
+        // ============================================================
+
+        function saveUsers() {
+            localStorage.setItem('solarwatch_users', JSON.stringify(users));
+        }
+
+        function saveHistory() {
+            localStorage.setItem('solarwatch_history', JSON.stringify(historyData));
+        }
+
+        function saveDevices() {
+            localStorage.setItem('solarwatch_devices', JSON.stringify(customDevices));
+        }
+
+        function showToast(type, message) {
+            const toast = document.getElementById('toast');
+            const msg = document.getElementById('toastMessage');
+            toast.className = 'toast ' + type;
+            msg.textContent = message;
+            toast.classList.add('show');
+            clearTimeout(toast._timeout);
+            toast._timeout = setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        function openModal(id) {
+            document.getElementById(id).classList.add('active');
+        }
+
+        function addLog(message, type = 'info') {
+            const container = document.getElementById('logContainer');
+            if (!container) return;
+            const time = new Date().toLocaleTimeString('id-ID');
+
+            if (container.querySelector('.text-gray-500')) container.innerHTML = '';
+
+            const colors = { info: 'text-gray-300', success: 'text-emerald-400', warning: 'text-yellow-400',
+                error: 'text-red-400' };
+            const icons = { info: 'ℹ️', success: '✅', warning: '⚠️', error: '❌' };
+
+            const entry = document.createElement('div');
+            entry.className =
+                `flex items-start gap-1.5 text-[9px] py-0.5 px-1 rounded hover:bg-white/5 transition ${colors[type] || 'text-gray-300'}`;
+            entry.innerHTML =
+                `<span class="text-gray-600 flex-shrink-0">${time}</span><span>${icons[type] || '•'} ${message}</span>`;
+            container.prepend(entry);
+
+            while (container.children.length > 25) container.removeChild(container.lastChild);
+        }
+
+        // Generate dummy history
+        function generateHistoryData() {
+            const data = [];
+            const now = new Date();
+            for (let i = 0; i < 50; i++) {
+                const d = new Date(now - i * 60000);
+                const power = 10 + Math.random() * 35;
+                data.push({
+                    id: ++historyCounter,
+                    time: d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+                    date: d.toLocaleDateString('id-ID'),
+                    datetime: d.toLocaleString('id-ID'),
+                    power: Math.round(power * 10) / 10,
+                    voltage: Math.round((17 + Math.random() * 8) * 10) / 10,
+                    current: Math.round((0.5 + Math.random() * 2.5) * 100) / 100,
+                    light: Math.round(1000 + Math.random() * 90000),
+                    temp: Math.round((26 + Math.random() * 18) * 10) / 10,
+                    status: power > 25 ? 'Baik' : power > 10 ? 'Normal' : 'Rendah',
+                });
+            }
+            return data;
+        }
+
+        historyData = JSON.parse(localStorage.getItem('solarwatch_history')) || generateHistoryData();
+
+        // ============================================================
+        // 4. LOGIN / LOGOUT
+        // ============================================================
+
+        function handleLogin(event) {
+            event.preventDefault();
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value.trim();
+
+            const user = users.find(u => u.username === username && u.password === password);
+
+            if (user) {
+                currentUser = user;
+                sessionStorage.setItem('solarwatch_current_user', JSON.stringify(user));
+                document.getElementById('loginOverlay').classList.add('hidden');
+                document.getElementById('userDisplay').textContent = user.username.charAt(0).toUpperCase() + user.username
+                    .slice(1);
+                document.getElementById('userEmailDisplay').textContent = user.email;
+                document.getElementById('userCount').textContent = users.length;
+                showToast('success', '✅ Selamat datang, ' + user.username + '!');
+                addLog('🔐 User ' + user.username + ' login', 'success');
+                renderUsers();
+                renderDevices();
+                updateDashboard();
+            } else {
+                showToast('error', '❌ Username atau password salah!');
+            }
+        }
+
+        function handleLogout() {
+            if (confirm('Yakin ingin logout?')) {
+                sessionStorage.removeItem('solarwatch_current_user');
+                currentUser = null;
+                document.getElementById('loginOverlay').classList.remove('hidden');
+                showToast('info', '🔒 Anda telah logout');
+                addLog('🔒 User logout', 'info');
+            }
+        }
+
+        // ============================================================
+        // 5. NAVIGASI
+        // ============================================================
+
+        const pageTitles = {
+            dashboard: 'Dashboard Overview',
+            analytics: '📊 Analytics & Statistik',
+            devices: '🔌 Manajemen Perangkat',
+            history: '📜 Riwayat Data',
+            alerts: '🔔 Notifikasi & Alert',
+            settings: '⚙️ Pengaturan Sistem',
+            users: '👥 Manajemen User'
+        };
+
+        let currentPage = 'dashboard';
+
+        function navigateTo(page) {
+            document.querySelectorAll('.sidebar-link').forEach(el => el.classList.remove('active'));
+            const link = document.querySelector(`.sidebar-link[data-page="${page}"]`);
+            if (link) link.classList.add('active');
+
+            document.querySelectorAll('.page-content').forEach(el => el.classList.remove('active'));
+            const content = document.getElementById('page-' + page);
+            if (content) content.classList.add('active');
+
+            document.getElementById('pageTitle').textContent = pageTitles[page] || page;
+            currentPage = page;
+
+            if (page === 'dashboard') updateDashboard();
+            if (page === 'analytics') updateAnalytics();
+            if (page === 'history') renderFullHistory();
+            if (page === 'users') renderUsers();
+            if (page === 'devices') renderDevices();
+
+            addLog('📄 Buka: ' + pageTitles[page], 'info');
+        }
+
+        // ============================================================
+        // 6. DASHBOARD
+        // ============================================================
+
+        let mainChart = null;
+        let trendChart = null;
+        let analyticsChart = null;
+        let analyticsDetailChart = null;
+
+        let chartLabels = [];
+        let chartPower = [];
+        let chartVoltage = [];
+        let chartLight = [];
+        let trendData = [2.1, 2.8, 3.4, 3.9, 4.2, 3.7, 2.9];
+
+        function initCharts() {
+            // Main Chart
+            const ctx1 = document.getElementById('mainChart').getContext('2d');
+            const grad = ctx1.createLinearGradient(0, 0, 0, 200);
+            grad.addColorStop(0, 'rgba(52, 211, 153, 0.2)');
+            grad.addColorStop(1, 'rgba(52, 211, 153, 0)');
+
+            for (let i = 0; i < 30; i++) {
+                const val = 10 + Math.random() * 35;
+                chartLabels.push(new Date(Date.now() - (30 - i) * 60000).toLocaleTimeString('id-ID', { hour: '2-digit',
+                    minute: '2-digit' }));
+                chartPower.push(Math.round(val * 10) / 10);
+                chartVoltage.push(Math.round((17 + Math.random() * 8) * 10) / 10);
+                chartLight.push(Math.round((1 + Math.random() * 98)));
+            }
+
+            mainChart = new Chart(ctx1, {
+                type: 'line',
+                data: {
+                    labels: chartLabels,
+                    datasets: [{
+                        label: 'Daya (W)',
+                        data: chartPower,
+                        borderColor: '#34d399',
+                        backgroundColor: grad,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 1.5,
+                        pointBackgroundColor: '#34d399',
+                        borderWidth: 2,
+                    }, {
+                        label: 'Tegangan (V)',
+                        data: chartVoltage,
+                        borderColor: '#60a5fa',
+                        backgroundColor: 'transparent',
+                        fill: false,
+                        tension: 0.4,
+                        pointRadius: 1.5,
+                        pointBackgroundColor: '#60a5fa',
+                        borderWidth: 1.5,
+                        borderDash: [4, 4],
+                    }, {
+                        label: 'Cahaya (kLux)',
+                        data: chartLight,
+                        borderColor: '#fbbf24',
+                        backgroundColor: 'transparent',
+                        fill: false,
+                        tension: 0.4,
+                        pointRadius: 1.5,
+                        pointBackgroundColor: '#fbbf24',
+                        borderWidth: 1.5,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, tooltip: { backgroundColor: 'rgba(10,14,26,0.9)',
+                            titleColor: '#e2e8f0', bodyColor: '#cbd5e1', borderColor: 'rgba(255,255,255,0.05)',
+                            borderWidth: 1 } },
+                    scales: {
+                        x: { grid: { color: 'rgba(255,255,255,0.02)' }, ticks: { color: '#64748b', font: { size: 8 } },
+                            maxTicksLimit: 10 },
+                        y: { grid: { color: 'rgba(255,255,255,0.02)' }, ticks: { color: '#64748b', font: { size: 8 } },
+                            beginAtZero: true }
+                    },
+                    interaction: { intersect: false, mode: 'index' }
+                }
+            });
+
+            // Trend Chart
+            const ctxTrend = document.getElementById('trendChart').getContext('2d');
+            const gradTrend = ctxTrend.createLinearGradient(0, 0, 0, 80);
+            gradTrend.addColorStop(0, 'rgba(167, 139, 250, 0.3)');
+            gradTrend.addColorStop(1, 'rgba(167, 139, 250, 0)');
+
+            trendChart = new Chart(ctxTrend, {
+                type: 'line',
+                data: {
+                    labels: ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'],
+                    datasets: [{
+                        label: 'Energi (kWh)',
+                        data: trendData,
+                        borderColor: '#a78bfa',
+                        backgroundColor: gradTrend,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 2,
+                        pointBackgroundColor: '#a78bfa',
+                        borderWidth: 2,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, tooltip: { backgroundColor: 'rgba(10,14,26,0.9)',
+                            titleColor: '#e2e8f0', bodyColor: '#cbd5e1', borderColor: 'rgba(255,255,255,0.05)',
+                            borderWidth: 1, callbacks: { label: ctx => ctx.parsed.y + ' kWh' } } },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { color: '#64748b', font: { size: 7 } } },
+                        y: { grid: { display: false }, ticks: { color: '#64748b', font: { size: 7 } },
+                        beginAtZero: true }
+                    },
+                    interaction: { intersect: false, mode: 'index' }
+                }
+            });
+
+            // Analytics Chart
+            const ctx3 = document.getElementById('analyticsChart').getContext('2d');
+            analyticsChart = new Chart(ctx3, {
+                type: 'line',
+                data: {
+                    labels: ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'],
+                    datasets: [{
+                        label: 'Energi (kWh)',
+                        data: [2.1, 2.8, 3.4, 3.9, 4.2, 3.7, 2.9],
+                        borderColor: '#34d399',
+                        backgroundColor: 'rgba(52,211,153,0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 2,
+                        pointBackgroundColor: '#34d399',
+                        borderWidth: 2,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, tooltip: { backgroundColor: 'rgba(10,14,26,0.9)',
+                            titleColor: '#e2e8f0', bodyColor: '#cbd5e1', borderColor: 'rgba(255,255,255,0.05)',
+                            borderWidth: 1 } },
+                    scales: {
+                        x: { grid: { color: 'rgba(255,255,255,0.02)' }, ticks: { color: '#64748b', font: { size: 8 } } },
+                        y: { grid: { color: 'rgba(255,255,255,0.02)' }, ticks: { color: '#64748b', font: { size: 8 } },
+                            beginAtZero: true }
+                    }
+                }
+            });
+
+            // Analytics Detail Chart
+            const ctx4 = document.getElementById('analyticsDetailChart').getContext('2d');
+            analyticsDetailChart = new Chart(ctx4, {
+                type: 'bar',
+                data: {
+                    labels: ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'],
+                    datasets: [{
+                        label: 'Energi (kWh)',
+                        data: [2.1, 2.8, 3.4, 3.9, 4.2, 3.7, 2.9],
+                        backgroundColor: ['rgba(52,211,153,0.7)', 'rgba(52,211,153,0.7)',
+                            'rgba(52,211,153,0.7)', 'rgba(52,211,153,0.7)', 'rgba(52,211,153,0.7)',
+                            'rgba(52,211,153,0.7)', 'rgba(52,211,153,0.7)'
+                        ],
+                        borderColor: '#34d399',
+                        borderWidth: 1,
+                        borderRadius: 4,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, tooltip: { backgroundColor: 'rgba(10,14,26,0.9)',
+                            titleColor: '#e2e8f0', bodyColor: '#cbd5e1', borderColor: 'rgba(255,255,255,0.05)',
+                            borderWidth: 1, callbacks: { label: ctx => ctx.parsed.y + ' kWh' } } },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { color: '#64748b', font: { size: 8 } } },
+                        y: { grid: { color: 'rgba(255,255,255,0.02)' }, ticks: { color: '#64748b', font: { size: 8 } },
+                            beginAtZero: true }
+                    }
+                }
+            });
+
+            updateTrendStats();
+        }
+
+        function updateTrendStats() {
+            const avg = trendData.reduce((a, b) => a + b, 0) / trendData.length;
+            const peak = Math.max(...trendData);
+            const min = Math.min(...trendData);
+            const change = ((trendData[trendData.length - 1] - trendData[0]) / trendData[0] * 100);
+
+            document.getElementById('trendAvg').textContent = avg.toFixed(1);
+            document.getElementById('trendPeak').textContent = peak.toFixed(1);
+            document.getElementById('trendMin').textContent = min.toFixed(1);
+            const changeEl = document.getElementById('trendChange');
+            changeEl.textContent = (change >= 0 ? '+' : '') + change.toFixed(1) + '%';
+            changeEl.className = 'stat-value ' + (change >= 0 ? 'text-emerald-400' : 'text-red-400');
+        }
+
+        function updateDashboard() {
+            const now = new Date();
+            const power = 10 + Math.random() * 35;
+            const voltage = 17 + Math.random() * 8;
+            const current = 0.5 + Math.random() * 2.5;
+            const light = 1000 + Math.random() * 90000;
+            const temp = 26 + Math.random() * 18;
+            const battery = 50 + Math.random() * 45;
+            const eff = 70 + Math.random() * 25;
+
+            document.getElementById('powerValue').textContent = power.toFixed(1);
+            document.getElementById('powerBar').style.width = Math.min((power / 50) * 100, 100) + '%';
+
+            document.getElementById('voltageValue').textContent = voltage.toFixed(1);
+            document.getElementById('voltageBar').style.width = Math.min((voltage / 25) * 100, 100) + '%';
+
+            document.getElementById('currentValue').textContent = current.toFixed(2);
+            document.getElementById('currentBar').style.width = Math.min((current / 5) * 100, 100) + '%';
+
+            const energy = 2 + Math.random() * 3;
+            document.getElementById('energyValue').textContent = energy.toFixed(3);
+            document.getElementById('energyBar').style.width = Math.min((energy / 6) * 100, 100) + '%';
+
+            document.getElementById('tempVal').textContent = temp.toFixed(1) + '°C';
+            document.getElementById('lightVal').textContent = Math.round(light).toLocaleString() + ' Lux';
+            document.getElementById('battVal').textContent = Math.round(battery) + '%';
+            document.getElementById('effValue').textContent = Math.round(eff) + '%';
+            document.getElementById('perfVal').textContent = Math.round(eff * 0.95) + '%';
+
+            const circ = 314;
+            const offset = circ - (eff / 100) * circ;
+            document.getElementById('effRing').setAttribute('stroke-dasharray', `${circ - offset} ${circ}`);
+
+            const badge = document.getElementById('statusBadge');
+            if (eff > 80) { badge.textContent = 'Optimal';
+                badge.className = 'text-[9px] px-2 py-0.5 rounded-full badge-green'; } else if (eff > 65) { badge
+                    .textContent = 'Normal';
+                badge.className = 'text-[9px] px-2 py-0.5 rounded-full badge-yellow'; } else { badge.textContent =
+                    'Perhatian';
+                badge.className = 'text-[9px] px-2 py-0.5 rounded-full badge-red'; }
+
+            document.getElementById('headerTime').textContent = now.toLocaleString('id-ID');
+
+            // Update chart
+            const time = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+            chartLabels.push(time);
+            chartPower.push(Math.round(power * 10) / 10);
+            chartVoltage.push(Math.round(voltage * 10) / 10);
+            chartLight.push(Math.round(light / 1000));
+            if (chartLabels.length > 30) { chartLabels.shift();
+                chartPower.shift();
+                chartVoltage.shift();
+                chartLight.shift(); }
+
+            if (mainChart) {
+                mainChart.data.labels = chartLabels;
+                mainChart.data.datasets[0].data = chartPower;
+                mainChart.data.datasets[1].data = chartVoltage;
+                mainChart.data.datasets[2].data = chartLight;
+                mainChart.update('none');
+            }
+
+            // Update trend
+            trendData.push(Math.round((2 + Math.random() * 3) * 10) / 10);
+            if (trendData.length > 7) trendData.shift();
+            if (trendChart) {
+                trendChart.data.datasets[0].data = trendData;
+                trendChart.update('none');
+                updateTrendStats();
+            }
+
+            // Update history
+            const status = power > 25 ? 'Baik' : power > 10 ? 'Normal' : 'Rendah';
+            historyData.unshift({
+                id: ++historyCounter,
+                time: time,
+                date: now.toLocaleDateString('id-ID'),
+                datetime: now.toLocaleString('id-ID'),
+                power: Math.round(power * 10) / 10,
+                voltage: Math.round(voltage * 10) / 10,
+                current: Math.round(current * 100) / 100,
+                light: Math.round(light),
+                temp: Math.round(temp * 10) / 10,
+                status: status,
+            });
+            if (historyData.length > 100) historyData.pop();
+            saveHistory();
+
+            updateTrends();
+            if (currentPage === 'history') renderFullHistory();
+            if (currentPage === 'analytics') updateAnalytics();
+        }
+
+        function updateTrends() {
+            const trends = [
+                { id: 'powerTrend', val: (Math.random() - 0.2) * 25, cls: 'badge-green' },
+                { id: 'voltageTrend', val: (Math.random() - 0.3) * 8, cls: 'badge-blue' },
+                { id: 'currentTrend', val: (Math.random() - 0.5) * 4, cls: 'badge-blue' },
+                { id: 'energyTrend', val: (Math.random() - 0.1) * 30, cls: 'badge-yellow' },
+            ];
+            trends.forEach(t => {
+                const el = document.getElementById(t.id);
+                if (!el) return;
+                const val = t.val;
+                const icon = val >= 0 ? 'fa-arrow-up' : 'fa-arrow-down';
+                const cls = val >= 0 ? 'badge-green' : 'badge-red';
+                el.innerHTML = `<i class="fas ${icon} mr-0.5"></i> ${Math.abs(val).toFixed(1)}%`;
+                el.className = `text-[9px] px-1.5 py-0.5 rounded-full ${cls} font-medium`;
+            });
+        }
+
+        function globalRefresh() {
+            showToast('success', '🔄 Data direfresh!');
+            for (let i = 0; i < 3; i++) setTimeout(() => updateDashboard(), i * 300);
+            addLog('🔄 Refresh manual', 'success');
+        }
+
+        function clearLogs() {
+            const container = document.getElementById('logContainer');
+            if (container) {
+                container.innerHTML = `<div class="text-center text-gray-500 text-[9px] py-1">Log kosong</div>`;
+                showToast('info', '🗑️ Log dihapus');
+            }
+        }
+
+        // ============================================================
+        // 7. ANALYTICS
+        // ============================================================
+
+        let analyticsFilter = 'weekly';
+
+        function updateAnalytics() {
+            const data = historyData.slice(0, 50);
+            if (data.length === 0) return;
+
+            const avgP = data.reduce((s, d) => s + d.power, 0) / data.length;
+            const peakP = Math.max(...data.map(d => d.power));
+            const totalE = data.reduce((s, d) => s + d.power / 1000 * 0.5, 0);
+            const avgEff = 70 + Math.random() * 25;
+            const opH = Math.round(data.length * 0.5);
+
+            document.getElementById('avgPower').textContent = avgP.toFixed(1) + ' W';
+            document.getElementById('peakPower').textContent = peakP.toFixed(1) + ' W';
+            document.getElementById('totalEnergy').textContent = totalE.toFixed(2) + ' kWh';
+            document.getElementById('avgEff').textContent = Math.min(98, Math.round(avgEff)) + '%';
+            document.getElementById('opTime').textContent = opH + ' jam';
+
+            const last = data[0] || { power: 0 };
+            document.getElementById('todayPower').textContent = last.power.toFixed(1) + ' W';
+            document.getElementById('todayEnergy').textContent = (last.power / 1000 * 0.5).toFixed(3) + ' kWh';
+            document.getElementById('todayPeak').textContent = peakP.toFixed(1) + ' W';
+            document.getElementById('todayEff').textContent = Math.min(98, Math.round(avgEff)) + '%';
+        }
+
+        function filterAnalytics(filter) {
+            analyticsFilter = filter;
+            const labels = { weekly: 'Mingguan', monthly: 'Bulanan', yearly: 'Tahunan' };
+            document.getElementById('analyticsFilterLabel').textContent = 'Menampilkan: ' + labels[filter];
+
+            let data;
+            switch (filter) {
+                case 'weekly':
+                    data = [2.1, 2.8, 3.4, 3.9, 4.2, 3.7, 2.9];
+                    break;
+                case 'monthly':
+                    data = [12.5, 14.2, 16.8, 18.3, 20.1, 19.5, 17.8, 15.2, 13.9, 11.8, 10.5, 9.2];
+                    break;
+                case 'yearly':
+                    data = [180, 210, 245, 290, 320, 280, 250, 220, 190, 160, 140, 120];
+                    break;
+            }
+
+            if (analyticsChart) {
+                const labels2 = filter === 'weekly' ? ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'] :
+                    filter === 'monthly' ? ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov',
+                        'Des'
+                    ] :
+                    ['2017', '2018', '2019', '2020', '2021', '2022', '2023', '2024', '2025', '2026'];
+                analyticsChart.data.labels = labels2;
+                analyticsChart.data.datasets[0].data = data;
+                analyticsChart.update();
+            }
+
+            showToast('info', '📊 Menampilkan data ' + labels[filter]);
+            addLog('📊 Filter analytics: ' + labels[filter], 'info');
+        }
+
+        function openAnalyticsDetail() {
+            openModal('analyticsDetailModal');
+            const data = historyData.slice(0, 50);
+            const avgP = data.reduce((s, d) => s + d.power, 0) / data.length;
+            const peakP = Math.max(...data.map(d => d.power));
+            const totalE = data.reduce((s, d) => s + d.power / 1000 * 0.5, 0);
+
+            document.getElementById('detailAvg').textContent = avgP.toFixed(1) + ' W';
+            document.getElementById('detailPeak').textContent = peakP.toFixed(1) + ' W';
+            document.getElementById('detailTotal').textContent = totalE.toFixed(2) + ' kWh';
+
+            if (analyticsDetailChart) {
+                analyticsDetailChart.data.datasets[0].data = [avgP * 0.7, avgP * 0.8, avgP * 0.9, avgP, avgP * 1.05,
+                    avgP * 0.95, avgP * 0.85
+                ];
+                analyticsDetailChart.update();
+            }
+        }
+
+        // ============================================================
+        // 8. DEVICES - RENDER
+        // ============================================================
+
+        function renderDevices() {
+            const listContainer = document.getElementById('deviceList');
+            const controlsContainer = document.getElementById('deviceControls');
+            const countEl = document.getElementById('deviceCount');
+            const onlineEl = document.getElementById('deviceOnlineCount');
+            const badgeEl = document.getElementById('deviceBadge');
+
+            if (!listContainer || !controlsContainer) return;
+
+            const onlineCount = customDevices.filter(d => d.status === 'online').length;
+            if (countEl) countEl.textContent = customDevices.length + ' perangkat';
+            if (onlineEl) onlineEl.textContent = onlineCount + ' online';
+            if (badgeEl) badgeEl.textContent = customDevices.length;
+
+            // Render daftar perangkat
+            listContainer.innerHTML = customDevices.map(d => {
+                const statusClass = d.status === 'online' ? 'badge-green' : 'badge-red';
+                const statusText = d.status === 'online' ? 'Online' : 'Offline';
+                const icon = d.icon || 'fa-microchip';
+                const color = d.color || '#34d399';
+                const isDeletable = !['pump', 'fan', 'light'].includes(d.id);
+
+                return `
+                    <div class="device-item flex items-center justify-between p-2 bg-white/5 rounded-lg" data-device="${d.id}">
+                        <div class="flex items-center gap-2">
+                            <div class="w-7 h-7 rounded-lg flex items-center justify-center text-xs" style="background:${color}20; color:${color}">
+                                <i class="fas ${icon}"></i>
+                            </div>
+                            <div>
+                                <p class="text-white text-xs font-medium">${d.name}</p>
+                                <p class="text-[8px] text-gray-500">${d.type} · ${d.topic}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-[8px] px-1.5 py-0.5 rounded-full ${statusClass}"><i class="fas fa-circle text-[5px] mr-0.5"></i> ${statusText}</span>
+                            ${isDeletable ? `<button onclick="deleteDevice('${d.id}')" class="text-red-400 hover:text-red-300 text-xs"><i class="fas fa-trash"></i></button>` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Render kontrol perangkat
+            controlsContainer.innerHTML = customDevices.map(d => {
+                const isActive = d.state !== undefined ? d.state : true;
+                const statusColor = isActive ? 'text-emerald-400' : 'text-gray-400';
+                const statusText = d.stateLabel || (isActive ? 'Aktif' : 'Nonaktif');
+
+                let controlHTML = '';
+
+                switch (d.type) {
+                    case 'switch':
+                        controlHTML = `
+                            <div class="flex items-center justify-between p-2 bg-white/5 rounded-lg">
+                                <div>
+                                    <p class="text-white text-xs font-medium">${d.name}</p>
+                                    <p class="text-[8px] text-gray-500">Status: <span class="${statusColor}" id="dev_${d.id}_status">${statusText}</span></p>
+                                </div>
+                                <button class="${isActive ? 'btn-danger' : 'btn-primary'} text-[9px] px-3 py-1" onclick="toggleCustomDevice('${d.id}')">
+                                    <i class="fas ${isActive ? 'fa-stop' : 'fa-play'} mr-0.5"></i> 
+                                    <span id="dev_${d.id}_btn">${isActive ? 'Matikan' : 'Nyalakan'}</span>
+                                </button>
+                            </div>
+                        `;
+                        break;
+
+                    case 'toggle':
+                        controlHTML = `
+                            <div class="flex items-center justify-between p-2 bg-white/5 rounded-lg">
+                                <div>
+                                    <p class="text-white text-xs font-medium">${d.name}</p>
+                                    <p class="text-[8px] text-gray-500">Status: <span class="${statusColor}" id="dev_${d.id}_status">${statusText}</span></p>
+                                </div>
+                                <button class="btn-secondary text-[9px] px-3 py-1" onclick="toggleCustomDevice('${d.id}')">
+                                    <i class="fas fa-sync-alt mr-0.5"></i> 
+                                    <span id="dev_${d.id}_btn">Toggle</span>
+                                </button>
+                            </div>
+                        `;
+                        break;
+
+                    case 'button':
+                        controlHTML = `
+                            <div class="flex items-center justify-between p-2 bg-white/5 rounded-lg">
+                                <div>
+                                    <p class="text-white text-xs font-medium">${d.name}</p>
+                                    <p class="text-[8px] text-gray-500">Momentary · Kirim sinyal</p>
+                                </div>
+                                <button class="btn-primary text-[9px] px-3 py-1" onclick="triggerCustomDevice('${d.id}')">
+                                    <i class="fas fa-bolt mr-0.5"></i> Kirim
+                                </button>
+                            </div>
+                        `;
+                        break;
+
+                    case 'slider':
+                        const val = d.sliderValue || 50;
+                        const color = d.color || '#34d399';
+                        controlHTML = `
+                            <div class="p-2 bg-white/5 rounded-lg">
+                                <div class="flex items-center justify-between">
+                                    <p class="text-white text-xs font-medium">${d.name}</p>
+                                    <span class="text-[10px] text-emerald-400" id="dev_${d.id}_slider_val">${val}%</span>
+                                </div>
+                                <input type="range" min="0" max="100" value="${val}" 
+                                    class="w-full h-1.5 rounded-lg appearance-none cursor-pointer mt-1" 
+                                    style="background: linear-gradient(90deg, ${color} ${val}%, rgba(255,255,255,0.1) ${val}%)"
+                                    oninput="sliderCustomDevice('${d.id}', this.value)" />
+                                <p class="text-[7px] text-gray-500 mt-0.5">Kirim nilai ke ${d.topic}</p>
+                            </div>
+                        `;
+                        break;
+
+                    default:
+                        controlHTML = `
+                            <div class="flex items-center justify-between p-2 bg-white/5 rounded-lg">
+                                <div>
+                                    <p class="text-white text-xs font-medium">${d.name}</p>
+                                    <p class="text-[8px] text-gray-500">Tipe: ${d.type}</p>
+                                </div>
+                                <span class="text-[8px] text-gray-400">Belum didukung</span>
+                            </div>
+                        `;
+                }
+
+                return controlHTML;
+            }).join('');
+        }
+
+        // ============================================================
+        // 9. DEVICES - KONTROL
+        // ============================================================
+
+        function openAddDeviceModal() {
+            document.getElementById('newDeviceName').value = '';
+            document.getElementById('newDeviceTopic').value = '';
+            document.getElementById('newDeviceIcon').value = 'fa-microchip';
+            document.getElementById('newDeviceColor').value = '#34d399';
+            openModal('addDeviceModal');
+        }
+
+        function addDevice(event) {
+            event.preventDefault();
+
+            const name = document.getElementById('newDeviceName').value.trim();
+            const type = document.getElementById('newDeviceType').value;
+            const topic = document.getElementById('newDeviceTopic').value.trim();
+            const icon = document.getElementById('newDeviceIcon').value.trim() || 'fa-microchip';
+            const color = document.getElementById('newDeviceColor').value;
+            const status = document.getElementById('newDeviceStatus').value;
+
+            if (!name || !topic) {
+                showToast('error', '❌ Nama dan Topic harus diisi!');
+                return;
+            }
+
+            const id = 'dev_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
+
+            const newDevice = {
+                id: id,
+                name: name,
+                type: type,
+                topic: topic,
+                icon: icon,
+                color: color,
+                status: status,
+                state: type === 'slider' ? true : false,
+                stateLabel: type === 'switch' ? 'Aktif' : type === 'toggle' ? 'Otomatis' : '--',
+                sliderValue: type === 'slider' ? 50 : undefined,
+            };
+
+            customDevices.push(newDevice);
+            saveDevices();
+            renderDevices();
+
+            showToast('success', `✅ Perangkat "${name}" berhasil ditambahkan!`);
+            addLog(`🛠️ Device "${name}" added (${type})`, 'success');
+            closeModal('addDeviceModal');
+
+            if (isMqttConnected && mqttClient) {
+                const msg = new Paho.MQTT.Message(JSON.stringify({ action: 'add', device: newDevice }));
+                msg.destinationName = 'solarwatch/device/register';
+                mqttClient.send(msg);
+            }
+        }
+
+        function deleteDevice(deviceId) {
+            if (['pump', 'fan', 'light'].includes(deviceId)) {
+                showToast('error', '❌ Tidak dapat menghapus device bawaan!');
+                return;
+            }
+
+            const device = customDevices.find(d => d.id === deviceId);
+            if (!device) return;
+
+            if (confirm(`Yakin ingin menghapus perangkat "${device.name}"?`)) {
+                customDevices = customDevices.filter(d => d.id !== deviceId);
+                saveDevices();
+                renderDevices();
+                showToast('info', `🗑️ Perangkat "${device.name}" dihapus`);
+                addLog(`🛠️ Device "${device.name}" deleted`, 'warning');
+            }
+        }
+
+        function toggleCustomDevice(deviceId) {
+            const device = customDevices.find(d => d.id === deviceId);
+            if (!device) return;
+
+            // Cek role
+            if (currentUser && (currentUser.role === 'viewer')) {
+                showToast('error', '❌ Viewer tidak dapat mengontrol perangkat!');
+                return;
+            }
+
+            if (device.type === 'toggle') {
+                device.state = !device.state;
+                device.stateLabel = device.state ? 'Otomatis' : 'Manual';
+            } else {
+                device.state = !device.state;
+                device.stateLabel = device.state ? 'Aktif' : 'Nonaktif';
+            }
+
+            saveDevices();
+
+            const statusEl = document.getElementById(`dev_${deviceId}_status`);
+            const btnEl = document.getElementById(`dev_${deviceId}_btn`);
+
+            if (statusEl) {
+                statusEl.textContent = device.stateLabel;
+                statusEl.className = device.state ? 'text-emerald-400' : 'text-gray-400';
+            }
+
+            if (btnEl) {
+                if (device.type === 'toggle') {
+                    btnEl.textContent = 'Toggle';
+                } else {
+                    btnEl.textContent = device.state ? 'Matikan' : 'Nyalakan';
+                }
+            }
+
+            const parentBtn = document.querySelector(`[onclick*="toggleCustomDevice('${deviceId}')"]`);
+            if (parentBtn) {
+                parentBtn.className = device.state ? 'btn-danger text-[9px] px-3 py-1' :
+                'btn-primary text-[9px] px-3 py-1';
+            }
+
+            const msg = device.state ? 'diaktifkan' : 'dinonaktifkan';
+            showToast('info', `🔧 ${device.name} ${msg}`);
+            addLog(`🔧 ${device.name} ${msg}`, 'info');
+
+            if (isMqttConnected && mqttClient) {
+                const payload = JSON.stringify({
+                    device: device.id,
+                    state: device.state,
+                    value: device.state ? 1 : 0,
+                    timestamp: new Date().toISOString()
+                });
+                const msgMqtt = new Paho.MQTT.Message(payload);
+                msgMqtt.destinationName = device.topic;
+                mqttClient.send(msgMqtt);
+                document.getElementById('mqttLatency').textContent = (Math.random() * 30 + 8).toFixed(0) + 'ms';
+            }
+        }
+
+        function triggerCustomDevice(deviceId) {
+            const device = customDevices.find(d => d.id === deviceId);
+            if (!device) return;
+
+            if (currentUser && (currentUser.role === 'viewer')) {
+                showToast('error', '❌ Viewer tidak dapat mengontrol perangkat!');
+                return;
+            }
+
+            showToast('info', `⚡ Sinyal dikirim ke ${device.name}`);
+            addLog(`⚡ ${device.name} triggered`, 'info');
+
+            if (isMqttConnected && mqttClient) {
+                const payload = JSON.stringify({
+                    device: device.id,
+                    action: 'trigger',
+                    timestamp: new Date().toISOString()
+                });
+                const msg = new Paho.MQTT.Message(payload);
+                msg.destinationName = device.topic;
+                mqttClient.send(msg);
+                document.getElementById('mqttLatency').textContent = (Math.random() * 30 + 8).toFixed(0) + 'ms';
+            }
+        }
+
+        function sliderCustomDevice(deviceId, value) {
+            const device = customDevices.find(d => d.id === deviceId);
+            if (!device) return;
+
+            if (currentUser && (currentUser.role === 'viewer')) {
+                showToast('error', '❌ Viewer tidak dapat mengontrol perangkat!');
+                return;
+            }
+
+            device.sliderValue = parseInt(value);
+            saveDevices();
+
+            const valEl = document.getElementById(`dev_${deviceId}_slider_val`);
+            if (valEl) valEl.textContent = value + '%';
+
+            const slider = document.querySelector(`[oninput*="sliderCustomDevice('${deviceId}']`);
+            if (slider) {
+                const color = device.color || '#34d399';
+                slider.style.background =
+                `linear-gradient(90deg, ${color} ${value}%, rgba(255,255,255,0.1) ${value}%)`;
+            }
+
+            if (isMqttConnected && mqttClient) {
+                const payload = JSON.stringify({
+                    device: device.id,
+                    value: parseInt(value),
+                    timestamp: new Date().toISOString()
+                });
+                const msg = new Paho.MQTT.Message(payload);
+                msg.destinationName = device.topic;
+                mqttClient.send(msg);
+                document.getElementById('mqttLatency').textContent = (Math.random() * 30 + 8).toFixed(0) + 'ms';
+            }
+        }
+
+        // ============================================================
+        // 10. HISTORY
+        // ============================================================
+
+        function renderFullHistory() {
+            const tbody = document.getElementById('historyFullBody');
+            if (!tbody) return;
+
+            if (historyData.length === 0) {
+                tbody.innerHTML =
+                    `<tr><td colspan="7" class="text-center text-gray-500 py-4 text-sm">Belum ada data</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = historyData.slice(0, 100).map(d => {
+                const cls = d.status === 'Baik' ? 'badge-green' : d.status === 'Normal' ? 'badge-yellow' :
+                    'badge-red';
+                return `<tr>
+                    <td class="text-gray-400 text-[10px]">${d.date} ${d.time}</td>
+                    <td class="text-right text-white font-medium">${d.power.toFixed(1)}</td>
+                    <td class="text-right text-gray-400">${d.voltage.toFixed(1)}</td>
+                    <td class="text-right text-gray-400">${d.current.toFixed(2)}</td>
+                    <td class="text-right text-gray-400">${d.light.toLocaleString()}</td>
+                    <td class="text-right text-gray-400">${d.temp.toFixed(1)}°C</td>
+                    <td class="text-center"><span class="text-[8px] px-1.5 py-0.5 rounded-full ${cls}">${d.status}</span></td>
+                </tr>`;
+            }).join('');
+        }
+
+        function exportCSV() {
+            if (historyData.length === 0) {
+                showToast('warning', '⚠️ Tidak ada data untuk diekspor!');
+                return;
+            }
+
+            const headers = ['Tanggal', 'Waktu', 'Daya (W)', 'Tegangan (V)', 'Arus (A)', 'Cahaya (Lux)', 'Suhu (°C)',
+                'Status'
+            ];
+            const rows = historyData.map(d => [
+                d.date, d.time, d.power.toFixed(1), d.voltage.toFixed(1),
+                d.current.toFixed(2), d.light.toFixed(0), d.temp.toFixed(1), d.status
+            ]);
+
+            const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `solarwatch_history_${new Date().toISOString().slice(0,10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+
+            showToast('success', '📥 Data berhasil diekspor ke CSV!');
+            addLog('📥 Export CSV berhasil', 'success');
+        }
+
+        function clearAllHistory() {
+            if (historyData.length === 0) {
+                showToast('warning', '⚠️ Tidak ada data untuk dihapus!');
+                return;
+            }
+
+            if (currentUser && currentUser.role !== 'admin') {
+                showToast('error', '❌ Hanya Admin yang dapat menghapus semua history!');
+                return;
+            }
+
+            if (confirm('⚠️ Yakin ingin menghapus SEMUA data historis? Tindakan ini tidak dapat dibatalkan!')) {
+                historyData = [];
+                saveHistory();
+                renderFullHistory();
+                showToast('success', '🗑️ Semua data historis telah dihapus!');
+                addLog('🗑️ Semua history dihapus', 'warning');
+            }
+        }
+
+        function exportData() {
+            exportCSV();
+        }
+
+        // ============================================================
+        // 11. ALERTS
+        // ============================================================
+
+        function toggleNotification(type) {
+            if (currentUser && currentUser.role === 'viewer') {
+                showToast('error', '❌ Viewer tidak dapat mengubah notifikasi!');
+                return;
+            }
+
+            notifStates[type] = !notifStates[type];
+            const btn = document.getElementById(type + 'NotifBtn');
+            const isActive = notifStates[type];
+
+            btn.textContent = isActive ? 'Aktif' : 'Nonaktif';
+            btn.className = isActive ? 'btn-primary text-[9px] px-3 py-1' : 'btn-secondary text-[9px] px-3 py-1';
+
+            const labels = { email: 'Email', sms: 'SMS', push: 'Push' };
+            showToast('info', `📧 ${labels[type]} notifikasi ${isActive ? 'diaktifkan' : 'dinonaktifkan'}`);
+            addLog(`📧 ${labels[type]} notifikasi ${isActive ? 'ON' : 'OFF'}`, 'info');
+        }
+
+        function openAdvancedSettings() {
+            if (currentUser && currentUser.role !== 'admin') {
+                showToast('error', '❌ Hanya Admin yang dapat mengakses pengaturan lanjutan!');
+                return;
+            }
+            openModal('advancedSettingsModal');
+        }
+
+        function saveAdvancedSettings() {
+            const min = document.getElementById('thresholdMin').value;
+            const max = document.getElementById('thresholdMax').value;
+            const email = document.getElementById('notifEmail').value;
+            const wa = document.getElementById('notifWhatsapp').value;
+
+            if (parseFloat(min) >= parseFloat(max)) {
+                showToast('error', '❌ Daya minimum harus kurang dari maksimum!');
+                return;
+            }
+
+            localStorage.setItem('solarwatch_advanced', JSON.stringify({
+                thresholdMin: min,
+                thresholdMax: max,
+                notifEmail: email,
+                notifWhatsapp: wa,
+            }));
+
+            showToast('success', '⚙️ Pengaturan lanjutan disimpan!');
+            addLog('⚙️ Advanced settings saved', 'success');
+            closeModal('advancedSettingsModal');
+        }
+
+        // ============================================================
+        // 12. SETTINGS
+        // ============================================================
+
+        function saveSettings() {
+            if (currentUser && currentUser.role !== 'admin') {
+                showToast('error', '❌ Hanya Admin yang dapat mengubah pengaturan!');
+                return;
+            }
+
+            const name = document.getElementById('systemName').value;
+            const broker = document.getElementById('mqttBroker').value;
+            const interval = document.getElementById('updateInterval').value;
+
+            localStorage.setItem('solarwatch_settings', JSON.stringify({
+                systemName: name,
+                mqttBroker: broker,
+                updateInterval: interval,
+            }));
+
+            showToast('success', '💾 Pengaturan umum disimpan!');
+            addLog('⚙️ Settings saved: ' + name, 'success');
+        }
+
+        function updateSecurity() {
+            if (currentUser && currentUser.role !== 'admin') {
+                showToast('error', '❌ Hanya Admin yang dapat memperbarui keamanan!');
+                return;
+            }
+
+            const username = document.getElementById('securityUsername').value.trim();
+            const password = document.getElementById('securityPassword').value.trim();
+            const apiKey = document.getElementById('apiKey').value.trim();
+
+            if (!username) {
+                showToast('error', '❌ Username tidak boleh kosong!');
+                return;
+            }
+
+            const current = users.find(u => u.id === 1);
+            if (current) {
+                current.username = username;
+                if (password) current.password = password;
+            }
+
+            localStorage.setItem('solarwatch_api_key', apiKey);
+            saveUsers();
+
+            showToast('success', '🔑 Keamanan diperbarui!');
+            addLog('🔑 Security updated for user: ' + username, 'success');
+
+            document.getElementById('userDisplay').textContent = username.charAt(0).toUpperCase() + username.slice(1);
+        }
+
+        function updateSettingsTime() {
+            document.getElementById('settingsUpdate').textContent = new Date().toLocaleString('id-ID');
+        }
+
+        // ============================================================
+        // 13. USERS
+        // ============================================================
+
+        function renderUsers() {
+            const container = document.getElementById('userList');
+            if (!container) return;
+
+            if (users.length === 0) {
+                container.innerHTML = `<div class="text-center text-gray-500 text-sm py-4">Belum ada user</div>`;
+                return;
+            }
+
+            container.innerHTML = users.map(u => `
+                <div class="user-item">
+                    <div class="flex items-center gap-2">
+                        <div class="w-7 h-7 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center text-white text-xs font-bold">
+                            ${u.username.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                            <p class="text-white text-xs font-medium">${u.username}</p>
+                            <p class="text-[8px] text-gray-400">${u.email} · ${u.role}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <span class="text-[8px] px-1.5 py-0.5 rounded-full ${u.id === 1 ? 'badge-green' : 'badge-blue'}">
+                            ${u.id === 1 ? 'Owner' : u.role}
+                        </span>
+                        ${u.id !== 1 ? `<button onclick="deleteUser(${u.id})" class="text-red-400 hover:text-red-300 text-xs"><i class="fas fa-trash"></i></button>` : ''}
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('totalUsers').textContent = users.length;
+            document.getElementById('activeUsers').textContent = users.filter(u => u.id !== 2).length;
+            document.getElementById('userCount').textContent = users.length;
+        }
+
+        function openAddUserModal() {
+            if (currentUser && currentUser.role !== 'admin') {
+                showToast('error', '❌ Hanya Admin yang dapat menambah user!');
+                return;
+            }
+            document.getElementById('newUsername').value = '';
+            document.getElementById('newEmail').value = '';
+            document.getElementById('newPassword').value = '';
+            openModal('addUserModal');
+        }
+
+        function addUser(event) {
+            event.preventDefault();
+            const username = document.getElementById('newUsername').value.trim();
+            const email = document.getElementById('newEmail').value.trim();
+            const password = document.getElementById('newPassword').value.trim();
+            const role = document.getElementById('newRole').value;
+
+            if (!username || !email || !password) {
+                showToast('error', '❌ Semua field harus diisi!');
+                return;
+            }
+
+            if (users.find(u => u.username === username)) {
+                showToast('error', '❌ Username sudah digunakan!');
+                return;
+            }
+
+            if (users.find(u => u.email === email)) {
+                showToast('error', '❌ Email sudah digunakan!');
+                return;
+            }
+
+            const newUser = {
+                id: Math.max(...users.map(u => u.id), 0) + 1,
+                username,
+                email,
+                password,
+                role,
+            };
+
+            users.push(newUser);
+            saveUsers();
+            renderUsers();
+
+            showToast('success', `👤 User ${username} berhasil ditambahkan!`);
+            addLog(`👤 User ${username} added (${role})`, 'success');
+            closeModal('addUserModal');
+        }
+
+        function deleteUser(id) {
+            if (id === 1) {
+                showToast('error', '❌ Tidak dapat menghapus Owner!');
+                return;
+            }
+
+            if (currentUser && currentUser.role !== 'admin') {
+                showToast('error', '❌ Hanya Admin yang dapat menghapus user!');
+                return;
+            }
+
+            if (confirm('Yakin ingin menghapus user ini?')) {
+                const user = users.find(u => u.id === id);
+                users = users.filter(u => u.id !== id);
+                saveUsers();
+                renderUsers();
+                showToast('info', `🗑️ User ${user ? user.username : ''} dihapus`);
+                addLog(`🗑️ User ${user ? user.username : ''} deleted`, 'warning');
+            }
+        }
+
+        // ============================================================
+        // 14. MQTT
+        // ============================================================
+
+        let mqttClient = null;
+        let isMqttConnected = false;
+
+        function connectMqtt() {
+            try {
+                const broker = 'wss://broker.emqx.io:8084/mqtt';
+                const clientId = 'solarwatch_' + Math.random().toString(36).substr(2, 6);
+                mqttClient = new Paho.MQTT.Client(broker, clientId);
+
+                mqttClient.onConnectionLost = function() {
+                    isMqttConnected = false;
+                    document.getElementById('mqttDot').className = 'status-dot offline';
+                    document.getElementById('mqttStatus').textContent = 'Disconnected';
+                    document.getElementById('mqttLatency').textContent = '--ms';
+                };
+
+                mqttClient.onMessageArrived = function(msg) {
+                    try {
+                        const val = parseFloat(msg.payloadString);
+                        if (isNaN(val)) return;
+                        document.getElementById('mqttLatency').textContent = (Math.random() * 30 + 8).toFixed(0) +
+                        'ms';
+                    } catch (e) {}
+                };
+
+                mqttClient.connect({
+                    timeout: 10,
+                    onSuccess: function() {
+                        isMqttConnected = true;
+                        document.getElementById('mqttDot').className = 'status-dot online';
+                        document.getElementById('mqttStatus').textContent = 'Connected';
+                        addLog('✅ MQTT terhubung', 'success');
+                        ['power', 'voltage', 'current', 'light', 'temperature', 'battery'].forEach(t => {
+                            mqttClient.subscribe('solarwatch/panel/' + t);
+                        });
+                    },
+                    onFailure: function() {
+                        document.getElementById('mqttDot').className = 'status-dot offline';
+                        document.getElementById('mqttStatus').textContent = 'Offline (Dummy)';
+                        addLog('⚠️ MQTT offline, pakai dummy', 'warning');
+                    }
+                });
+            } catch (e) {
+                document.getElementById('mqttDot').className = 'status-dot offline';
+                document.getElementById('mqttStatus').textContent = 'Offline (Dummy)';
+                addLog('⚠️ MQTT error, pakai dummy', 'warning');
+            }
+        }
+
+        // ============================================================
+        // 15. INIT
+        // ============================================================
+
+        let updateInterval = null;
+
+        function init() {
+            // Cek login
+            if (currentUser) {
+                document.getElementById('loginOverlay').classList.add('hidden');
+                document.getElementById('userDisplay').textContent = currentUser.username.charAt(0).toUpperCase() +
+                    currentUser.username.slice(1);
+                document.getElementById('userEmailDisplay').textContent = currentUser.email;
+                document.getElementById('userCount').textContent = users.length;
+                addLog('🔐 Auto-login: ' + currentUser.username, 'success');
+            } else {
+                document.getElementById('loginOverlay').classList.remove('hidden');
+            }
+
+            document.getElementById('headerTime').textContent = new Date().toLocaleString('id-ID');
+            updateSettingsTime();
+
+            initCharts();
+            renderUsers();
+            renderDevices();
+            renderFullHistory();
+            updateDashboard();
+            updateAnalytics();
+
+            addLog('🚀 SolarWatch Pro siap', 'success');
+            addLog('📊 Data dummy aktif', 'info');
+
+            updateInterval = setInterval(() => {
+                if (currentPage === 'dashboard') updateDashboard();
+            }, 2000);
+
+            setTimeout(connectMqtt, 1000);
+            setTimeout(() => {
+                if (currentUser) showToast('success', '🚀 Selamat datang, ' + currentUser.username + '!');
+            }, 600);
+
+            const savedSettings = JSON.parse(localStorage.getItem('solarwatch_settings'));
+            if (savedSettings) {
+                document.getElementById('systemName').value = savedSettings.systemName || 'SolarWatch Pro';
+                document.getElementById('mqttBroker').value = savedSettings.mqttBroker ||
+                    'wss://broker.emqx.io:8084/mqtt';
+                document.getElementById('updateInterval').value = savedSettings.updateInterval || '2';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+
+        window.addEventListener('beforeunload', function() {
+            if (updateInterval) clearInterval(updateInterval);
+            if (mqttClient) mqttClient.disconnect();
+        });
+    </script>
+
+</body>
+</html>
