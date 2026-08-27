@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>SolarWatch Pro — Monitoring Panel Surya</title>
 
     <!-- Tailwind CSS -->
@@ -40,20 +40,43 @@
             flex-direction: column;
         }
 
-        /* Sidebar */
+        /* ============================================================
+           SIDEBAR - MOBILE FRIENDLY
+           ============================================================ */
+
         .sidebar {
-            background: rgba(10, 14, 26, 0.95);
-            backdrop-filter: blur(20px);
-            border-right: 1px solid rgba(255, 255, 255, 0.04);
-            z-index: 100;
-            height: 100vh;
             position: fixed;
             top: 0;
             left: 0;
+            height: 100vh;
+            width: 260px;
+            background: rgba(10, 14, 26, 0.97);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255, 255, 255, 0.04);
+            z-index: 1000;
+            transform: translateX(-100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             overflow-y: auto;
-            transition: all 0.3s ease;
+            padding: 16px;
         }
 
+        .sidebar.open {
+            transform: translateX(0);
+        }
+
+        .sidebar-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            display: none;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        /* Sidebar scroll */
         .sidebar::-webkit-scrollbar {
             width: 3px;
         }
@@ -104,34 +127,129 @@
             margin-left: auto;
         }
 
-        /* Main Content */
+        /* ============================================================
+           MAIN WRAPPER
+           ============================================================ */
+
         .main-wrapper {
-            margin-left: 60px;
+            margin-left: 0;
             height: 100vh;
             overflow: hidden;
             display: flex;
             flex-direction: column;
             flex: 1;
+            transition: margin-left 0.3s ease;
         }
 
-        @media (min-width: 1024px) {
-            .main-wrapper {
-                margin-left: 220px;
-            }
-        }
+        /* ============================================================
+           HEADER - Mobile Friendly
+           ============================================================ */
 
-        /* Header */
         .header-fixed {
             flex-shrink: 0;
-            padding: 10px 20px 6px 20px;
+            padding: 8px 12px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px;
+            min-height: 50px;
         }
 
-        /* Dashboard Content */
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 0;
+        }
+
+        .hamburger-btn {
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            color: #cbd5e1;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .hamburger-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+        }
+
+        .header-title {
+            min-width: 0;
+        }
+
+        .header-title h2 {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #ffffff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .header-title p {
+            font-size: 0.6rem;
+            color: #94a3b8;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex-shrink: 0;
+            flex-wrap: nowrap;
+        }
+
+        .header-actions .btn-secondary {
+            padding: 4px 8px;
+            font-size: 0.6rem;
+        }
+
+        .header-actions .btn-secondary span {
+            display: none;
+        }
+
+        .mqtt-status {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 6px;
+            padding: 3px 8px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .mqtt-status .status-dot {
+            width: 6px;
+            height: 6px;
+        }
+
+        .mqtt-status .mqtt-label {
+            font-size: 0.55rem;
+            color: #94a3b8;
+            display: none;
+        }
+
+        /* ============================================================
+           DASHBOARD CONTENT - Mobile Responsive
+           ============================================================ */
+
         .dashboard-content {
             flex: 1;
             overflow: hidden;
-            padding: 8px 20px 10px 20px;
+            padding: 6px 8px 8px 8px;
             display: flex;
             flex-direction: column;
         }
@@ -139,75 +257,68 @@
         .dashboard-grid {
             display: grid;
             grid-template-rows: auto 1fr auto;
-            gap: 8px;
+            gap: 5px;
             height: 100%;
             min-height: 0;
         }
 
+        /* Metrics Row - Mobile 2 kolom */
         .metrics-row {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 8px;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 4px;
             flex-shrink: 0;
         }
 
+        /* Middle Row - Mobile 1 kolom */
         .middle-row {
             display: grid;
-            grid-template-columns: 1.6fr 1fr;
-            gap: 8px;
+            grid-template-columns: 1fr;
+            gap: 5px;
             min-height: 0;
             flex: 1;
         }
 
         .status-trend-col {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 5px;
             min-height: 0;
         }
 
         .status-trend-col .card-premium {
-            flex: 1;
             min-height: 0;
         }
 
-        .status-trend-col .card-premium:first-child {
-            flex: 1.2;
-        }
+        /* ============================================================
+           CARDS - Mobile Compact
+           ============================================================ */
 
-        .status-trend-col .card-premium:last-child {
-            flex: 1;
-        }
-
-        /* Card */
         .card-premium {
             background: rgba(20, 30, 50, 0.85);
             backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.06);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-            border-radius: 14px;
-            padding: 12px 14px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 8px 10px;
             display: flex;
             flex-direction: column;
             min-height: 0;
-        }
-
-        .card-premium:hover {
-            border-color: rgba(52, 211, 153, 0.15);
+            overflow: hidden;
         }
 
         /* Metric Value */
         .metric-value {
-            font-size: 1.6rem;
+            font-size: 1.2rem;
             font-weight: 800;
             color: #ffffff;
             letter-spacing: -0.5px;
-            line-height: 1.2;
+            line-height: 1.1;
         }
 
         .metric-label {
             color: #94a3b8;
-            font-size: 0.6rem;
+            font-size: 0.5rem;
             text-transform: uppercase;
             letter-spacing: 0.08em;
             font-weight: 600;
@@ -239,19 +350,14 @@
             color: #a78bfa;
             border: 1px solid rgba(167, 139, 250, 0.1);
         }
-        .badge-gray {
-            background: rgba(255, 255, 255, 0.05);
-            color: #94a3b8;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
 
         /* Progress Bar */
         .progress-track {
             background: rgba(255, 255, 255, 0.05);
             border-radius: 99px;
-            height: 4px;
+            height: 3px;
             overflow: hidden;
-            margin-top: 4px;
+            margin-top: 3px;
         }
 
         .progress-fill {
@@ -271,21 +377,18 @@
         .progress-fill.yellow {
             background: linear-gradient(90deg, #fbbf24, #f59e0b);
         }
-        .progress-fill.purple {
-            background: linear-gradient(90deg, #a78bfa, #8b5cf6);
-        }
 
         /* Status Dot */
         .status-dot {
-            width: 8px;
-            height: 8px;
+            width: 6px;
+            height: 6px;
             border-radius: 50%;
             display: inline-block;
             flex-shrink: 0;
         }
         .status-dot.online {
             background: #34d399;
-            box-shadow: 0 0 12px rgba(52, 211, 153, 0.4);
+            box-shadow: 0 0 10px rgba(52, 211, 153, 0.3);
             animation: pulse-dot 2s ease-in-out infinite;
         }
         .status-dot.offline {
@@ -307,12 +410,13 @@
         .btn-secondary {
             background: rgba(255, 255, 255, 0.05);
             color: #cbd5e1;
-            padding: 5px 12px;
-            border-radius: 8px;
+            padding: 4px 8px;
+            border-radius: 6px;
             transition: all 0.3s ease;
             border: 1px solid rgba(255, 255, 255, 0.05);
             cursor: pointer;
-            font-size: 0.7rem;
+            font-size: 0.6rem;
+            white-space: nowrap;
         }
         .btn-secondary:hover {
             background: rgba(255, 255, 255, 0.1);
@@ -323,12 +427,13 @@
             background: linear-gradient(135deg, #34d399, #10b981);
             color: #0a0e1a;
             font-weight: 600;
-            padding: 5px 14px;
-            border-radius: 8px;
+            padding: 4px 10px;
+            border-radius: 6px;
             transition: all 0.3s ease;
             border: none;
             cursor: pointer;
-            font-size: 0.7rem;
+            font-size: 0.6rem;
+            white-space: nowrap;
         }
         .btn-primary:hover {
             transform: translateY(-1px);
@@ -338,12 +443,12 @@
         .btn-danger {
             background: rgba(248, 113, 113, 0.12);
             color: #f87171;
-            padding: 4px 10px;
+            padding: 3px 8px;
             border-radius: 6px;
             transition: all 0.3s ease;
             border: 1px solid rgba(248, 113, 113, 0.1);
             cursor: pointer;
-            font-size: 0.65rem;
+            font-size: 0.55rem;
         }
         .btn-danger:hover {
             background: rgba(248, 113, 113, 0.2);
@@ -365,15 +470,83 @@
         .log-container-dash {
             flex: 1;
             min-height: 0;
-            max-height: 50px;
+            max-height: 40px;
             overflow-y: auto;
+            font-size: 0.55rem;
         }
         .log-container-dash::-webkit-scrollbar {
-            width: 3px;
+            width: 2px;
         }
         .log-container-dash::-webkit-scrollbar-thumb {
             background: rgba(52, 211, 153, 0.2);
             border-radius: 99px;
+        }
+
+        /* Ring Efisiensi - Mobile */
+        .ring-container {
+            position: relative;
+            width: 50px;
+            height: 50px;
+            flex-shrink: 0;
+        }
+        .ring-container svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Status info - Mobile compact */
+        .status-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1px 6px;
+            font-size: 0.5rem;
+            flex: 1;
+        }
+        .status-info .label {
+            color: #94a3b8;
+        }
+        .status-info .value {
+            color: #ffffff;
+            font-weight: 500;
+            text-align: right;
+            font-size: 0.55rem;
+        }
+
+        /* Trend Stats - Mobile */
+        .trend-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 2px;
+            flex-shrink: 0;
+        }
+        .trend-stats .stat-item {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 4px;
+            padding: 2px 3px;
+            text-align: center;
+        }
+        .trend-stats .stat-item .stat-value {
+            font-size: 0.6rem;
+            font-weight: 700;
+            color: #ffffff;
+        }
+        .trend-stats .stat-item .stat-label {
+            font-size: 0.45rem;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        /* Trend chart */
+        .trend-chart-wrapper {
+            flex: 1;
+            min-height: 0;
+            position: relative;
+            margin-top: 1px;
+        }
+        .trend-chart-wrapper canvas {
+            width: 100% !important;
+            height: 100% !important;
         }
 
         /* Page Content */
@@ -390,16 +563,17 @@
         /* Toast */
         .toast {
             position: fixed;
-            bottom: 20px;
-            right: 20px;
-            padding: 12px 20px;
+            bottom: 12px;
+            right: 12px;
+            left: 12px;
+            padding: 10px 16px;
             border-radius: 10px;
             background: rgba(20, 30, 50, 0.95);
             backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.06);
             color: #e2e8f0;
-            font-size: 0.8rem;
-            max-width: 340px;
+            font-size: 0.75rem;
+            max-width: 100%;
             z-index: 999;
             transform: translateY(120px);
             opacity: 0;
@@ -425,152 +599,42 @@
 
         /* Glow */
         .glow-green {
-            text-shadow: 0 0 30px rgba(52, 211, 153, 0.15);
+            text-shadow: 0 0 20px rgba(52, 211, 153, 0.15);
         }
         .glow-blue {
-            text-shadow: 0 0 30px rgba(96, 165, 250, 0.15);
+            text-shadow: 0 0 20px rgba(96, 165, 250, 0.15);
         }
         .glow-indigo {
-            text-shadow: 0 0 30px rgba(129, 140, 248, 0.15);
+            text-shadow: 0 0 20px rgba(129, 140, 248, 0.15);
         }
         .glow-yellow {
-            text-shadow: 0 0 30px rgba(251, 191, 36, 0.15);
-        }
-        .glow-purple {
-            text-shadow: 0 0 30px rgba(167, 139, 250, 0.15);
+            text-shadow: 0 0 20px rgba(251, 191, 36, 0.15);
         }
 
-        /* Ring Efisiensi */
-        .ring-container {
-            position: relative;
-            width: 70px;
-            height: 70px;
-            flex-shrink: 0;
-        }
-        .ring-container svg {
-            width: 100%;
-            height: 100%;
-        }
+        /* ============================================================
+           TABLES - Mobile
+           ============================================================ */
 
-        @media (min-width: 1024px) {
-            .ring-container {
-                width: 85px;
-                height: 85px;
-            }
-        }
-
-        /* Status info */
-        .status-info {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 2px 12px;
-            font-size: 0.65rem;
-            flex: 1;
-        }
-        .status-info .label {
-            color: #94a3b8;
-        }
-        .status-info .value {
-            color: #ffffff;
-            font-weight: 500;
-            text-align: right;
-        }
-
-        /* Trend */
-        .trend-chart-wrapper {
-            flex: 1;
-            min-height: 0;
-            position: relative;
-            margin-top: 2px;
-        }
-        .trend-chart-wrapper canvas {
-            width: 100% !important;
-            height: 100% !important;
-        }
-
-        .trend-stats {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr 1fr;
-            gap: 4px;
-            flex-shrink: 0;
-        }
-        .trend-stats .stat-item {
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 6px;
-            padding: 3px 6px;
-            text-align: center;
-        }
-        .trend-stats .stat-item .stat-value {
-            font-size: 0.8rem;
-            font-weight: 700;
-            color: #ffffff;
-        }
-        .trend-stats .stat-item .stat-label {
-            font-size: 0.55rem;
-            color: #94a3b8;
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-        }
-
-        /* Tables */
         .table-premium th {
             color: #64748b;
             font-weight: 600;
-            font-size: 0.55rem;
+            font-size: 0.45rem;
             text-transform: uppercase;
             letter-spacing: 0.06em;
             border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-            padding: 6px 8px;
+            padding: 4px 6px;
         }
         .table-premium td {
-            padding: 6px 8px;
+            padding: 4px 6px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.02);
             color: #e2e8f0;
-            font-size: 0.75rem;
-        }
-        .table-premium tr:hover td {
-            background: rgba(255, 255, 255, 0.02);
+            font-size: 0.6rem;
         }
 
-        /* Page containers */
-        .page-history-content,
-        .page-full {
-            flex: 1;
-            overflow-y: auto;
-            padding: 10px 0;
-        }
-        .page-history-content::-webkit-scrollbar,
-        .page-full::-webkit-scrollbar {
-            width: 4px;
-        }
-        .page-history-content::-webkit-scrollbar-thumb,
-        .page-full::-webkit-scrollbar-thumb {
-            background: rgba(52, 211, 153, 0.2);
-            border-radius: 99px;
-        }
+        /* ============================================================
+           MODAL - Mobile
+           ============================================================ */
 
-        .page-history-content .table-wrap {
-            flex: 1;
-            overflow-y: auto;
-            min-height: 0;
-        }
-
-        /* User management */
-        .user-list .user-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 8px 12px;
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.04);
-        }
-
-        .user-list .user-item:hover {
-            background: rgba(255, 255, 255, 0.06);
-        }
-
-        /* Modal overlay */
         .modal-overlay {
             position: fixed;
             inset: 0;
@@ -580,6 +644,7 @@
             display: none;
             align-items: center;
             justify-content: center;
+            padding: 16px;
         }
 
         .modal-overlay.active {
@@ -590,10 +655,10 @@
             background: rgba(20, 30, 50, 0.95);
             backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.06);
-            border-radius: 16px;
-            padding: 24px;
+            border-radius: 14px;
+            padding: 18px 16px;
             max-width: 480px;
-            width: 90%;
+            width: 100%;
             max-height: 80vh;
             overflow-y: auto;
             box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6);
@@ -614,12 +679,12 @@
         .modal-box input,
         .modal-box select {
             width: 100%;
-            padding: 8px 12px;
+            padding: 6px 10px;
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 8px;
             color: #e2e8f0;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             outline: none;
             transition: border 0.3s ease;
         }
@@ -629,25 +694,16 @@
             border-color: rgba(52, 211, 153, 0.4);
         }
 
-        .modal-box input::placeholder {
-            color: #64748b;
-        }
-
         .modal-box input[type="color"] {
             padding: 2px;
-            height: 40px;
+            height: 36px;
             cursor: pointer;
         }
 
-        /* Device item */
-        .device-item {
-            transition: all 0.2s ease;
-        }
-        .device-item:hover {
-            background: rgba(255, 255, 255, 0.08) !important;
-        }
+        /* ============================================================
+           LOGIN - Mobile
+           ============================================================ */
 
-        /* Login Overlay */
         .login-overlay {
             position: fixed;
             inset: 0;
@@ -656,6 +712,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            padding: 20px;
         }
 
         .login-overlay.hidden {
@@ -666,123 +723,229 @@
             background: rgba(20, 30, 50, 0.9);
             backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.06);
-            border-radius: 20px;
-            padding: 40px 36px;
-            max-width: 400px;
-            width: 90%;
+            border-radius: 18px;
+            padding: 28px 24px;
+            max-width: 380px;
+            width: 100%;
             box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6);
         }
 
         .login-box input {
             width: 100%;
-            padding: 10px 14px;
+            padding: 8px 12px;
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 10px;
+            border-radius: 8px;
             color: #e2e8f0;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             outline: none;
-            transition: border 0.3s ease;
         }
 
         .login-box input:focus {
             border-color: rgba(52, 211, 153, 0.4);
         }
 
-        .login-box input::placeholder {
-            color: #64748b;
+        /* ============================================================
+           PAGE CONTAINERS - Mobile
+           ============================================================ */
+
+        .page-history-content,
+        .page-full {
+            flex: 1;
+            overflow-y: auto;
+            padding: 6px 0;
+        }
+        .page-history-content::-webkit-scrollbar,
+        .page-full::-webkit-scrollbar {
+            width: 3px;
+        }
+        .page-history-content::-webkit-scrollbar-thumb,
+        .page-full::-webkit-scrollbar-thumb {
+            background: rgba(52, 211, 153, 0.2);
+            border-radius: 99px;
         }
 
-        /* Responsive */
-        @media (max-width: 768px) {
-            .metrics-row {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 5px;
+        .page-history-content .table-wrap {
+            flex: 1;
+            overflow-y: auto;
+            min-height: 0;
+        }
+
+        /* ============================================================
+           DEVICE ITEMS - Mobile
+           ============================================================ */
+
+        .device-item {
+            transition: all 0.2s ease;
+            padding: 6px 8px !important;
+        }
+        .device-item:hover {
+            background: rgba(255, 255, 255, 0.08) !important;
+        }
+
+        /* User list */
+        .user-list .user-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 10px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            font-size: 0.7rem;
+        }
+
+        /* ============================================================
+           RESPONSIVE BREAKPOINTS
+           ============================================================ */
+
+        /* Tablet & Desktop */
+        @media (min-width: 768px) {
+            .sidebar {
+                transform: translateX(0) !important;
+                width: 200px;
+                position: fixed;
             }
-            .middle-row {
-                grid-template-columns: 1fr;
-                gap: 5px;
+
+            .sidebar-overlay {
+                display: none !important;
             }
-            .status-trend-col {
-                flex-direction: row;
-                gap: 5px;
+
+            .main-wrapper {
+                margin-left: 200px;
             }
-            .status-trend-col .card-premium {
-                flex: 1;
+
+            .hamburger-btn {
+                display: none;
             }
-            .metric-value {
+
+            .header-title h2 {
                 font-size: 1.2rem;
             }
-            .sidebar {
-                width: 50px;
+
+            .metrics-row {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 8px;
             }
-            .sidebar-text {
-                display: none !important;
+
+            .middle-row {
+                grid-template-columns: 1.6fr 1fr;
+                gap: 8px;
             }
-            .main-wrapper {
-                margin-left: 50px;
+
+            .status-trend-col {
+                grid-template-columns: 1fr;
+                gap: 6px;
             }
-            .header-fixed {
-                padding: 6px 10px;
+
+            .metric-value {
+                font-size: 1.8rem;
             }
-            .dashboard-content {
-                padding: 5px 10px 6px 10px;
-            }
+
             .card-premium {
-                padding: 8px 10px;
+                padding: 12px 16px;
+                border-radius: 12px;
             }
+
             .ring-container {
-                width: 55px;
-                height: 55px;
+                width: 70px;
+                height: 70px;
             }
+
             .status-info {
-                font-size: 0.55rem;
-                gap: 1px 8px;
+                font-size: 0.6rem;
+                gap: 2px 12px;
             }
-            .trend-stats .stat-item .stat-value {
-                font-size: 0.65rem;
+
+            .header-actions .btn-secondary span {
+                display: inline;
             }
-            .hide-mobile {
-                display: none !important;
+
+            .mqtt-status .mqtt-label {
+                display: inline;
             }
-            .login-box {
-                padding: 24px 20px;
+
+            .toast {
+                left: auto;
+                right: 20px;
+                max-width: 360px;
             }
         }
 
-        @media (max-width: 480px) {
-            .metrics-row {
-                grid-template-columns: 1fr 1fr;
-                gap: 4px;
+        @media (min-width: 1024px) {
+            .sidebar {
+                width: 240px;
             }
+            .main-wrapper {
+                margin-left: 240px;
+            }
+            .metric-value {
+                font-size: 2.2rem;
+            }
+            .card-premium {
+                padding: 16px 20px;
+            }
+            .ring-container {
+                width: 85px;
+                height: 85px;
+            }
+        }
+
+        /* Mobile Small */
+        @media (max-width: 480px) {
             .metric-value {
                 font-size: 1rem;
             }
             .card-premium {
                 padding: 5px 7px;
-                border-radius: 10px;
+                border-radius: 8px;
+            }
+            .metrics-row {
+                gap: 3px;
             }
             .status-trend-col {
-                flex-direction: column;
+                grid-template-columns: 1fr 1fr;
+                gap: 3px;
             }
             .ring-container {
-                width: 45px;
-                height: 45px;
+                width: 40px;
+                height: 40px;
+            }
+            .status-info {
+                font-size: 0.45rem;
+                gap: 1px 4px;
+            }
+            .status-info .value {
+                font-size: 0.5rem;
+            }
+            .trend-stats .stat-item .stat-value {
+                font-size: 0.5rem;
+            }
+            .trend-stats .stat-item .stat-label {
+                font-size: 0.4rem;
+            }
+            .header-title h2 {
+                font-size: 0.8rem;
+            }
+            .header-actions .btn-secondary {
+                padding: 3px 6px;
+                font-size: 0.5rem;
+            }
+            .mqtt-status {
+                padding: 2px 6px;
+            }
+            .mqtt-status .mqtt-label {
+                display: none;
             }
         }
 
-        @media (min-width: 1024px) {
-            .metric-value {
-                font-size: 2rem;
-            }
-            .card-premium {
-                padding: 14px 18px;
-            }
-        }
+        /* ============================================================
+           SCROLLBAR GLOBAL
+           ============================================================ */
 
         ::-webkit-scrollbar {
-            width: 4px;
-            height: 4px;
+            width: 3px;
+            height: 3px;
         }
         ::-webkit-scrollbar-track {
             background: rgba(255, 255, 255, 0.02);
@@ -792,36 +955,62 @@
             border-radius: 99px;
         }
 
-        /* Slider custom style */
+        /* Slider custom */
         input[type="range"] {
             -webkit-appearance: none;
             appearance: none;
             background: rgba(255, 255, 255, 0.1);
-            height: 6px;
+            height: 4px;
             border-radius: 99px;
             outline: none;
-            transition: background 0.2s ease;
         }
 
         input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
             appearance: none;
-            width: 16px;
-            height: 16px;
+            width: 14px;
+            height: 14px;
             border-radius: 50%;
             background: #34d399;
             cursor: pointer;
-            box-shadow: 0 0 20px rgba(52, 211, 153, 0.3);
+            box-shadow: 0 0 16px rgba(52, 211, 153, 0.3);
             border: 2px solid rgba(255, 255, 255, 0.1);
         }
 
         input[type="range"]::-moz-range-thumb {
-            width: 16px;
-            height: 16px;
+            width: 14px;
+            height: 14px;
             border-radius: 50%;
             background: #34d399;
             cursor: pointer;
             border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Hidden utility */
+        .hidden-mobile {
+            display: none !important;
+        }
+
+        @media (min-width: 768px) {
+            .hidden-mobile {
+                display: inline !important;
+            }
+        }
+
+        /* Card hover effect */
+        .card-premium:hover {
+            border-color: rgba(52, 211, 153, 0.15);
+        }
+
+        /* Device controls - mobile compact */
+        #deviceControls .flex {
+            gap: 4px;
+        }
+        #deviceControls .btn-primary,
+        #deviceControls .btn-secondary,
+        #deviceControls .btn-danger {
+            font-size: 0.55rem;
+            padding: 3px 8px;
         }
     </style>
 </head>
@@ -829,104 +1018,80 @@
 <body>
 
     <!-- ============================================================ -->
-    <!-- LOGIN OVERLAY -->
+    <!-- SIDEBAR OVERLAY (Mobile) -->
     <!-- ============================================================ -->
-    <div class="login-overlay" id="loginOverlay">
-        <div class="login-box">
-            <div class="text-center mb-6">
-                <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-400 to-green-600 flex items-center justify-center mx-auto shadow-lg shadow-green-500/20">
-                    <i class="fas fa-solar-panel text-white text-2xl"></i>
-                </div>
-                <h1 class="text-2xl font-bold text-white mt-3">SolarWatch Pro</h1>
-                <p class="text-gray-400 text-sm">Monitoring Panel Surya Premium</p>
-            </div>
-
-            <form id="loginForm" onsubmit="handleLogin(event)">
-                <div class="mb-3">
-                    <label class="text-gray-400 text-sm">Username</label>
-                    <input type="text" id="loginUsername" value="admin" placeholder="Masukkan username" required />
-                </div>
-                <div class="mb-4">
-                    <label class="text-gray-400 text-sm">Password</label>
-                    <input type="password" id="loginPassword" value="admin123" placeholder="Masukkan password" required />
-                </div>
-                <button type="submit" class="btn-primary w-full py-2.5 text-sm">
-                    <i class="fas fa-sign-in-alt mr-2"></i> Masuk
-                </button>
-                <p class="text-center text-gray-500 text-xs mt-3">
-                    Default: admin / admin123
-                </p>
-            </form>
-        </div>
-    </div>
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
     <!-- ============================================================ -->
     <!-- SIDEBAR -->
     <!-- ============================================================ -->
-    <aside class="sidebar w-14 lg:w-56" id="sidebar">
-        <div class="p-2 lg:p-4">
+    <aside class="sidebar" id="sidebar">
+        <div class="flex flex-col h-full">
 
             <!-- Logo -->
-            <div class="flex items-center gap-2 lg:gap-3 mb-4 lg:mb-6">
-                <div class="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-green-600 flex items-center justify-center shadow-lg shadow-green-500/20 flex-shrink-0">
-                    <i class="fas fa-solar-panel text-white text-sm lg:text-base"></i>
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-400 to-green-600 flex items-center justify-center shadow-lg shadow-green-500/20 flex-shrink-0">
+                    <i class="fas fa-solar-panel text-white text-sm"></i>
                 </div>
-                <div class="hidden lg:block">
+                <div>
                     <h1 class="text-lg font-bold text-white tracking-tight">SolarWatch</h1>
                     <p class="text-[8px] text-emerald-400 font-medium">Premium v3.0</p>
                 </div>
+                <button onclick="toggleSidebar()" class="ml-auto text-gray-400 hover:text-white lg:hidden">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
 
             <!-- Navigation -->
-            <nav class="space-y-0.5">
+            <nav class="space-y-0.5 flex-1">
                 <div class="sidebar-link active" data-page="dashboard" onclick="navigateTo('dashboard')">
                     <i class="fas fa-gauge-high text-sm w-5 text-center"></i>
-                    <span class="sidebar-text hidden lg:inline">Dashboard</span>
-                    <span class="badge-nav bg-emerald-500/20 text-emerald-400 hidden lg:inline">Live</span>
+                    <span>Dashboard</span>
+                    <span class="badge-nav bg-emerald-500/20 text-emerald-400">Live</span>
                 </div>
 
                 <div class="sidebar-link" data-page="analytics" onclick="navigateTo('analytics')">
                     <i class="fas fa-chart-pie text-sm w-5 text-center"></i>
-                    <span class="sidebar-text hidden lg:inline">Analytics</span>
-                    <span class="badge-nav bg-blue-500/20 text-blue-400 hidden lg:inline">Pro</span>
+                    <span>Analytics</span>
+                    <span class="badge-nav bg-blue-500/20 text-blue-400">Pro</span>
                 </div>
 
                 <div class="sidebar-link" data-page="devices" onclick="navigateTo('devices')">
                     <i class="fas fa-microchip text-sm w-5 text-center"></i>
-                    <span class="sidebar-text hidden lg:inline">Devices</span>
-                    <span class="badge-nav bg-blue-500/20 text-blue-400 hidden lg:inline" id="deviceBadge">6</span>
+                    <span>Devices</span>
+                    <span class="badge-nav bg-blue-500/20 text-blue-400" id="deviceBadge">6</span>
                 </div>
 
                 <div class="sidebar-link" data-page="history" onclick="navigateTo('history')">
                     <i class="fas fa-clock-rotate-left text-sm w-5 text-center"></i>
-                    <span class="sidebar-text hidden lg:inline">History</span>
+                    <span>History</span>
                 </div>
 
                 <div class="sidebar-link" data-page="alerts" onclick="navigateTo('alerts')">
                     <i class="fas fa-bell text-sm w-5 text-center"></i>
-                    <span class="sidebar-text hidden lg:inline">Alerts</span>
-                    <span class="badge-nav bg-red-500/20 text-red-400 hidden lg:inline">3</span>
+                    <span>Alerts</span>
+                    <span class="badge-nav bg-red-500/20 text-red-400">3</span>
                 </div>
 
                 <div class="sidebar-link" data-page="settings" onclick="navigateTo('settings')">
                     <i class="fas fa-gear text-sm w-5 text-center"></i>
-                    <span class="sidebar-text hidden lg:inline">Settings</span>
+                    <span>Settings</span>
                 </div>
 
                 <div class="sidebar-link" data-page="users" onclick="navigateTo('users')">
                     <i class="fas fa-users text-sm w-5 text-center"></i>
-                    <span class="sidebar-text hidden lg:inline">Users</span>
-                    <span class="badge-nav bg-purple-500/20 text-purple-400 hidden lg:inline" id="userCount">1</span>
+                    <span>Users</span>
+                    <span class="badge-nav bg-purple-500/20 text-purple-400" id="userCount">1</span>
                 </div>
             </nav>
 
             <!-- Profile & Logout -->
-            <div class="absolute bottom-2 left-2 right-2 lg:bottom-3 lg:left-4 lg:right-4">
-                <div class="flex items-center gap-2 px-2 py-1.5 lg:px-3 lg:py-2 rounded-xl bg-white/5 border border-white/5">
-                    <div class="w-6 h-6 lg:w-8 lg:h-8 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center text-white font-bold text-[8px] lg:text-xs flex-shrink-0">
+            <div class="mt-auto pt-4 border-t border-white/5">
+                <div class="flex items-center gap-2 px-2 py-2 rounded-xl bg-white/5 border border-white/5">
+                    <div class="w-7 h-7 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center text-white font-bold text-[8px] flex-shrink-0">
                         AD
                     </div>
-                    <div class="hidden lg:block flex-1 min-w-0">
+                    <div class="flex-1 min-w-0">
                         <p class="text-sm font-medium text-white truncate" id="userDisplay">Admin</p>
                         <p class="text-[8px] text-gray-400 truncate" id="userEmailDisplay">admin@solarwatch.id</p>
                     </div>
@@ -935,8 +1100,41 @@
                     </button>
                 </div>
             </div>
+
         </div>
     </aside>
+
+    <!-- ============================================================ -->
+    <!-- LOGIN OVERLAY -->
+    <!-- ============================================================ -->
+    <div class="login-overlay" id="loginOverlay">
+        <div class="login-box">
+            <div class="text-center mb-5">
+                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-400 to-green-600 flex items-center justify-center mx-auto shadow-lg shadow-green-500/20">
+                    <i class="fas fa-solar-panel text-white text-xl"></i>
+                </div>
+                <h1 class="text-xl font-bold text-white mt-3">SolarWatch Pro</h1>
+                <p class="text-gray-400 text-xs">Monitoring Panel Surya Premium</p>
+            </div>
+
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="mb-3">
+                    <label class="text-gray-400 text-xs">Username</label>
+                    <input type="text" id="loginUsername" value="admin" placeholder="Masukkan username" required />
+                </div>
+                <div class="mb-4">
+                    <label class="text-gray-400 text-xs">Password</label>
+                    <input type="password" id="loginPassword" value="admin123" placeholder="Masukkan password" required />
+                </div>
+                <button type="submit" class="btn-primary w-full py-2 text-sm">
+                    <i class="fas fa-sign-in-alt mr-2"></i> Masuk
+                </button>
+                <p class="text-center text-gray-500 text-[10px] mt-3">
+                    Default: admin / admin123
+                </p>
+            </form>
+        </div>
+    </div>
 
     <!-- ============================================================ -->
     <!-- MAIN WRAPPER -->
@@ -944,33 +1142,39 @@
     <div class="main-wrapper" id="mainWrapper">
 
         <!-- HEADER -->
-        <header class="header-fixed flex flex-wrap items-center justify-between gap-2">
-            <div>
-                <h2 class="text-lg sm:text-xl font-bold text-white" id="pageTitle">Dashboard Overview</h2>
-                <p class="text-gray-400 text-xs flex items-center gap-2 mt-0.5">
-                    <span class="status-dot online"></span>
-                    <span id="headerStatus">Sistem berjalan normal</span>
-                    <span class="text-gray-600">·</span>
-                    <span class="text-gray-500 text-[10px]" id="headerTime">--</span>
-                </p>
+        <header class="header-fixed">
+            <div class="header-left">
+                <button class="hamburger-btn" onclick="toggleSidebar()" aria-label="Toggle menu">
+                    <i class="fas fa-bars text-sm"></i>
+                </button>
+                <div class="header-title">
+                    <h2 id="pageTitle">Dashboard</h2>
+                    <p>
+                        <span class="status-dot online"></span>
+                        <span id="headerStatus">Normal</span>
+                        <span class="text-gray-600">·</span>
+                        <span class="text-gray-500" id="headerTime">--</span>
+                    </p>
+                </div>
             </div>
 
-            <div class="flex items-center gap-1.5 flex-wrap">
-                <div class="flex items-center gap-1.5 bg-slate-800/60 border border-white/5 rounded-lg px-2.5 py-1">
+            <div class="header-actions">
+                <div class="mqtt-status">
                     <span class="status-dot online" id="mqttDot"></span>
-                    <span class="text-[10px] text-gray-300" id="mqttStatus">Connected</span>
-                    <span class="w-px h-3 bg-white/10"></span>
-                    <span class="text-[9px] text-gray-500" id="mqttLatency">12ms</span>
+                    <span class="mqtt-label" id="mqttStatus">Online</span>
+                    <span class="text-[8px] text-gray-500" id="mqttLatency">12ms</span>
                 </div>
 
-                <button class="btn-secondary text-[10px] flex items-center gap-1" onclick="globalRefresh()">
-                    <i class="fas fa-rotate-right"></i> Refresh
+                <button class="btn-secondary" onclick="globalRefresh()" title="Refresh">
+                    <i class="fas fa-rotate-right"></i>
+                    <span>Refresh</span>
                 </button>
-                <button class="btn-secondary text-[10px] flex items-center gap-1" onclick="exportData()">
-                    <i class="fas fa-download"></i> Export
+                <button class="btn-secondary" onclick="exportData()" title="Export">
+                    <i class="fas fa-download"></i>
+                    <span>Export</span>
                 </button>
-                <button class="btn-secondary text-[10px] flex items-center gap-1" onclick="window.print()">
-                    <i class="fas fa-print"></i> Print
+                <button class="btn-secondary" onclick="window.print()" title="Print">
+                    <i class="fas fa-print"></i>
                 </button>
             </div>
         </header>
@@ -990,17 +1194,17 @@
                                 <div>
                                     <p class="metric-label">Daya</p>
                                     <p class="metric-value glow-green" id="powerValue">0.0</p>
-                                    <p class="text-[9px] text-gray-500">Watt</p>
+                                    <p class="text-[8px] text-gray-500">Watt</p>
                                 </div>
-                                <div class="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400 text-sm">
+                                <div class="w-6 h-6 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400 text-[10px]">
                                     <i class="fas fa-bolt"></i>
                                 </div>
                             </div>
-                            <div class="flex items-center gap-2 mt-1">
-                                <span class="text-[9px] px-1.5 py-0.5 rounded-full badge-green" id="powerTrend">
+                            <div class="flex items-center gap-1 mt-0.5">
+                                <span class="text-[7px] px-1 py-0.5 rounded-full badge-green" id="powerTrend">
                                     <i class="fas fa-arrow-up mr-0.5"></i> 12.5%
                                 </span>
-                                <span class="text-[8px] text-gray-500">vs kemarin</span>
+                                <span class="text-[6px] text-gray-500">vs kemarin</span>
                             </div>
                             <div class="progress-track">
                                 <div class="progress-fill green" id="powerBar" style="width:0%"></div>
@@ -1012,17 +1216,17 @@
                                 <div>
                                     <p class="metric-label">Tegangan</p>
                                     <p class="metric-value glow-blue" id="voltageValue">0.0</p>
-                                    <p class="text-[9px] text-gray-500">Volt</p>
+                                    <p class="text-[8px] text-gray-500">Volt</p>
                                 </div>
-                                <div class="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-400 text-sm">
+                                <div class="w-6 h-6 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-400 text-[10px]">
                                     <i class="fas fa-bolt"></i>
                                 </div>
                             </div>
-                            <div class="flex items-center gap-2 mt-1">
-                                <span class="text-[9px] px-1.5 py-0.5 rounded-full badge-blue" id="voltageTrend">
+                            <div class="flex items-center gap-1 mt-0.5">
+                                <span class="text-[7px] px-1 py-0.5 rounded-full badge-blue" id="voltageTrend">
                                     <i class="fas fa-arrow-up mr-0.5"></i> 3.2%
                                 </span>
-                                <span class="text-[8px] text-gray-500">vs kemarin</span>
+                                <span class="text-[6px] text-gray-500">vs kemarin</span>
                             </div>
                             <div class="progress-track">
                                 <div class="progress-fill blue" id="voltageBar" style="width:0%"></div>
@@ -1034,17 +1238,17 @@
                                 <div>
                                     <p class="metric-label">Arus</p>
                                     <p class="metric-value glow-indigo" id="currentValue">0.00</p>
-                                    <p class="text-[9px] text-gray-500">Ampere</p>
+                                    <p class="text-[8px] text-gray-500">Ampere</p>
                                 </div>
-                                <div class="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center text-indigo-400 text-sm">
+                                <div class="w-6 h-6 rounded-lg bg-indigo-500/20 flex items-center justify-center text-indigo-400 text-[10px]">
                                     <i class="fas fa-water"></i>
                                 </div>
                             </div>
-                            <div class="flex items-center gap-2 mt-1">
-                                <span class="text-[9px] px-1.5 py-0.5 rounded-full badge-blue" id="currentTrend">
+                            <div class="flex items-center gap-1 mt-0.5">
+                                <span class="text-[7px] px-1 py-0.5 rounded-full badge-blue" id="currentTrend">
                                     <i class="fas fa-minus mr-0.5"></i> 0.0%
                                 </span>
-                                <span class="text-[8px] text-gray-500">vs kemarin</span>
+                                <span class="text-[6px] text-gray-500">vs kemarin</span>
                             </div>
                             <div class="progress-track">
                                 <div class="progress-fill indigo" id="currentBar" style="width:0%"></div>
@@ -1054,19 +1258,19 @@
                         <div class="card-premium">
                             <div class="flex items-start justify-between">
                                 <div>
-                                    <p class="metric-label">Energi Hari Ini</p>
+                                    <p class="metric-label">Energi</p>
                                     <p class="metric-value glow-yellow" id="energyValue">0.00</p>
-                                    <p class="text-[9px] text-gray-500">kWh</p>
+                                    <p class="text-[8px] text-gray-500">kWh</p>
                                 </div>
-                                <div class="w-8 h-8 rounded-lg bg-yellow-500/20 flex items-center justify-center text-yellow-400 text-sm">
+                                <div class="w-6 h-6 rounded-lg bg-yellow-500/20 flex items-center justify-center text-yellow-400 text-[10px]">
                                     <i class="fas fa-sun"></i>
                                 </div>
                             </div>
-                            <div class="flex items-center gap-2 mt-1">
-                                <span class="text-[9px] px-1.5 py-0.5 rounded-full badge-yellow" id="energyTrend">
+                            <div class="flex items-center gap-1 mt-0.5">
+                                <span class="text-[7px] px-1 py-0.5 rounded-full badge-yellow" id="energyTrend">
                                     <i class="fas fa-arrow-up mr-0.5"></i> 18.7%
                                 </span>
-                                <span class="text-[8px] text-gray-500">vs kemarin</span>
+                                <span class="text-[6px] text-gray-500">vs kemarin</span>
                             </div>
                             <div class="progress-track">
                                 <div class="progress-fill yellow" id="energyBar" style="width:0%"></div>
@@ -1079,21 +1283,15 @@
 
                         <!-- Chart -->
                         <div class="card-premium">
-                            <div class="flex items-center justify-between mb-1 flex-shrink-0">
+                            <div class="flex items-center justify-between mb-0.5 flex-shrink-0">
                                 <div>
-                                    <h3 class="text-white font-semibold text-sm">Performansi Panel</h3>
-                                    <p class="text-[8px] text-gray-500">Real-time · 24 jam terakhir</p>
+                                    <h3 class="text-white font-semibold text-[10px]">Performansi Panel</h3>
+                                    <p class="text-[6px] text-gray-500">Real-time · 24 jam</p>
                                 </div>
-                                <div class="flex gap-2 text-[8px]">
-                                    <span class="flex items-center gap-1 text-gray-400">
-                                        <span class="w-2 h-0.5 bg-emerald-400"></span> Daya
-                                    </span>
-                                    <span class="flex items-center gap-1 text-gray-400">
-                                        <span class="w-2 h-0.5 bg-blue-400"></span> Teg
-                                    </span>
-                                    <span class="flex items-center gap-1 text-gray-400">
-                                        <span class="w-2 h-0.5 bg-yellow-400"></span> Cahaya
-                                    </span>
+                                <div class="flex gap-1.5 text-[6px]">
+                                    <span class="flex items-center gap-0.5 text-gray-400"><span class="w-1.5 h-0.5 bg-emerald-400"></span> Daya</span>
+                                    <span class="flex items-center gap-0.5 text-gray-400"><span class="w-1.5 h-0.5 bg-blue-400"></span> Teg</span>
+                                    <span class="flex items-center gap-0.5 text-gray-400"><span class="w-1.5 h-0.5 bg-yellow-400"></span> Cahaya</span>
                                 </div>
                             </div>
                             <div class="chart-wrapper">
@@ -1106,12 +1304,12 @@
 
                             <!-- Status Panel -->
                             <div class="card-premium">
-                                <div class="flex items-center justify-between mb-1 flex-shrink-0">
-                                    <h3 class="text-white font-semibold text-sm">Status Panel</h3>
-                                    <span class="text-[9px] px-2 py-0.5 rounded-full badge-green" id="statusBadge">Optimal</span>
+                                <div class="flex items-center justify-between mb-0.5 flex-shrink-0">
+                                    <h3 class="text-white font-semibold text-[10px]">Status</h3>
+                                    <span class="text-[7px] px-1.5 py-0.5 rounded-full badge-green" id="statusBadge">Optimal</span>
                                 </div>
 
-                                <div class="flex items-center gap-3 flex-1 min-h-0">
+                                <div class="flex items-center gap-1.5 flex-1 min-h-0">
                                     <div class="ring-container">
                                         <svg viewBox="0 0 120 120">
                                             <circle cx="60" cy="60" r="50" stroke="rgba(255,255,255,0.05)" stroke-width="9" fill="none"/>
@@ -1125,15 +1323,15 @@
                                             </defs>
                                         </svg>
                                         <div class="absolute inset-0 flex flex-col items-center justify-center">
-                                            <span class="text-base lg:text-lg font-bold text-white" id="effValue">0%</span>
-                                            <span class="text-[5px] text-gray-500">Efisiensi</span>
+                                            <span class="text-[10px] font-bold text-white" id="effValue">0%</span>
+                                            <span class="text-[4px] text-gray-500">Efisiensi</span>
                                         </div>
                                     </div>
 
                                     <div class="status-info">
-                                        <span class="label">Suhu Panel</span>
+                                        <span class="label">Suhu</span>
                                         <span class="value" id="tempVal">--</span>
-                                        <span class="label">Intensitas</span>
+                                        <span class="label">Cahaya</span>
                                         <span class="value" id="lightVal">--</span>
                                         <span class="label">Baterai</span>
                                         <span class="value" id="battVal">--</span>
@@ -1142,15 +1340,15 @@
                                     </div>
                                 </div>
 
-                                <div class="grid grid-cols-3 gap-1.5 mt-1 flex-shrink-0">
-                                    <button class="btn-secondary text-[9px] flex flex-col items-center py-1" onclick="globalRefresh()">
-                                        <i class="fas fa-rotate-right text-[10px]"></i> Refresh
+                                <div class="grid grid-cols-3 gap-1 mt-0.5 flex-shrink-0">
+                                    <button class="btn-secondary text-[7px] flex flex-col items-center py-0.5" onclick="globalRefresh()">
+                                        <i class="fas fa-rotate-right text-[8px]"></i> Refresh
                                     </button>
-                                    <button class="btn-secondary text-[9px] flex flex-col items-center py-1" onclick="exportData()">
-                                        <i class="fas fa-download text-[10px]"></i> Export
+                                    <button class="btn-secondary text-[7px] flex flex-col items-center py-0.5" onclick="exportData()">
+                                        <i class="fas fa-download text-[8px]"></i> Export
                                     </button>
-                                    <button class="btn-secondary text-[9px] flex flex-col items-center py-1" onclick="window.print()">
-                                        <i class="fas fa-print text-[10px]"></i> Print
+                                    <button class="btn-secondary text-[7px] flex flex-col items-center py-0.5" onclick="window.print()">
+                                        <i class="fas fa-print text-[8px]"></i> Print
                                     </button>
                                 </div>
                             </div>
@@ -1158,18 +1356,18 @@
                             <!-- Trend Performa -->
                             <div class="card-premium">
                                 <div class="flex items-center justify-between mb-0.5 flex-shrink-0">
-                                    <h3 class="text-white font-semibold text-sm">📈 Trend Performa</h3>
-                                    <span class="text-[8px] text-gray-500">7 hari terakhir</span>
+                                    <h3 class="text-white font-semibold text-[10px]">📈 Trend</h3>
+                                    <span class="text-[6px] text-gray-500">7 hari</span>
                                 </div>
 
                                 <div class="trend-chart-wrapper">
                                     <canvas id="trendChart"></canvas>
                                 </div>
 
-                                <div class="trend-stats mt-1 flex-shrink-0">
+                                <div class="trend-stats mt-0.5 flex-shrink-0">
                                     <div class="stat-item">
                                         <div class="stat-value text-emerald-400" id="trendAvg">0.0</div>
-                                        <div class="stat-label">Rata-rata</div>
+                                        <div class="stat-label">Rata</div>
                                     </div>
                                     <div class="stat-item">
                                         <div class="stat-value text-blue-400" id="trendPeak">0.0</div>
@@ -1177,11 +1375,11 @@
                                     </div>
                                     <div class="stat-item">
                                         <div class="stat-value text-yellow-400" id="trendMin">0.0</div>
-                                        <div class="stat-label">Terendah</div>
+                                        <div class="stat-label">Min</div>
                                     </div>
                                     <div class="stat-item">
                                         <div class="stat-value text-purple-400" id="trendChange">+0%</div>
-                                        <div class="stat-label">Perubahan</div>
+                                        <div class="stat-label">Ubah</div>
                                     </div>
                                 </div>
                             </div>
@@ -1191,12 +1389,10 @@
                     </div>
 
                     <!-- ROW 3: LOG -->
-                    <div class="card-premium" style="flex-shrink:0; max-height:75px; padding:6px 14px;">
+                    <div class="card-premium" style="flex-shrink:0; max-height:50px; padding:4px 10px;">
                         <div class="flex items-center justify-between mb-0.5 flex-shrink-0">
-                            <div>
-                                <h3 class="text-white font-semibold text-[10px]">Log Aktivitas</h3>
-                            </div>
-                            <button class="btn-danger text-[8px] flex items-center gap-1" onclick="clearLogs()">
+                            <h3 class="text-white font-semibold text-[8px]">Log</h3>
+                            <button class="btn-danger text-[6px] flex items-center gap-0.5" onclick="clearLogs()">
                                 <i class="fas fa-trash"></i> Hapus
                             </button>
                         </div>
@@ -1213,25 +1409,25 @@
         <!-- ============================================================ -->
         <div id="page-analytics" class="page-content">
             <div class="page-full">
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 gap-3">
 
                     <div class="card-premium">
                         <h3 class="text-white font-semibold text-sm mb-2">📊 Statistik Performa</h3>
-                        <div class="space-y-1.5 text-sm">
+                        <div class="space-y-1 text-sm">
                             <div class="flex justify-between"><span class="text-gray-400">Rata-rata Daya</span><span class="text-white font-medium" id="avgPower">-- W</span></div>
                             <div class="flex justify-between"><span class="text-gray-400">Puncak Daya</span><span class="text-white font-medium" id="peakPower">-- W</span></div>
                             <div class="flex justify-between"><span class="text-gray-400">Total Energi</span><span class="text-white font-medium" id="totalEnergy">-- kWh</span></div>
-                            <div class="flex justify-between"><span class="text-gray-400">Efisiensi Rata-rata</span><span class="text-white font-medium" id="avgEff">--%</span></div>
+                            <div class="flex justify-between"><span class="text-gray-400">Efisiensi</span><span class="text-white font-medium" id="avgEff">--%</span></div>
                             <div class="flex justify-between"><span class="text-gray-400">Waktu Operasi</span><span class="text-white font-medium" id="opTime">-- jam</span></div>
                         </div>
                         <button class="btn-primary w-full mt-3 text-sm" onclick="openAnalyticsDetail()">
-                            <i class="fas fa-chart-simple mr-2"></i> Lihat Analisis Lengkap
+                            <i class="fas fa-chart-simple mr-2"></i> Analisis Lengkap
                         </button>
                     </div>
 
                     <div class="card-premium">
                         <h3 class="text-white font-semibold text-sm mb-2">📈 Tren Performa</h3>
-                        <div style="height:140px;">
+                        <div style="height:120px;">
                             <canvas id="analyticsChart"></canvas>
                         </div>
                         <div class="grid grid-cols-3 gap-1.5 mt-2">
@@ -1242,9 +1438,9 @@
                         <p class="text-[8px] text-gray-500 text-center mt-1" id="analyticsFilterLabel">Menampilkan: Mingguan</p>
                     </div>
 
-                    <div class="lg:col-span-2 card-premium">
-                        <h3 class="text-white font-semibold text-sm mb-2">📋 Laporan Performa Hari Ini</h3>
-                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-2">
+                    <div class="card-premium">
+                        <h3 class="text-white font-semibold text-sm mb-2">📋 Laporan Hari Ini</h3>
+                        <div class="grid grid-cols-2 gap-2">
                             <div class="bg-white/5 rounded-lg p-2 text-center">
                                 <p class="text-lg font-bold text-emerald-400" id="todayPower">--</p>
                                 <p class="text-[8px] text-gray-500">Daya</p>
@@ -1269,39 +1465,33 @@
         </div>
 
         <!-- ============================================================ -->
-        <!-- PAGE: DEVICES (Kontrol + Tambah Perangkat) -->
+        <!-- PAGE: DEVICES -->
         <!-- ============================================================ -->
         <div id="page-devices" class="page-content">
             <div class="page-full">
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 gap-3">
 
-                    <!-- Daftar Perangkat -->
                     <div class="card-premium">
                         <div class="flex items-center justify-between mb-2 flex-shrink-0">
                             <div>
-                                <h3 class="text-white font-semibold text-sm">🔌 Perangkat Terhubung</h3>
+                                <h3 class="text-white font-semibold text-sm">🔌 Perangkat</h3>
                                 <p class="text-[8px] text-gray-500" id="deviceCount">0 perangkat</p>
                             </div>
                             <button class="btn-primary text-[10px] px-3 py-1.5 flex items-center gap-1" onclick="openAddDeviceModal()">
                                 <i class="fas fa-plus"></i> Tambah
                             </button>
                         </div>
-                        <div class="space-y-1.5" id="deviceList">
-                            <!-- Diisi JS -->
-                        </div>
+                        <div class="space-y-1" id="deviceList"></div>
                     </div>
 
-                    <!-- Kontrol Perangkat -->
                     <div class="card-premium">
                         <div class="flex items-center justify-between mb-2 flex-shrink-0">
-                            <h3 class="text-white font-semibold text-sm">⚙️ Kontrol Perangkat</h3>
+                            <h3 class="text-white font-semibold text-sm">⚙️ Kontrol</h3>
                             <span class="text-[8px] text-gray-500" id="deviceOnlineCount">0 online</span>
                         </div>
-                        <div class="space-y-2" id="deviceControls">
-                            <!-- Diisi JS -->
-                        </div>
-                        <button class="btn-secondary w-full text-xs mt-2" onclick="showToast('info','🔍 Mencari perangkat baru...')">
-                            <i class="fas fa-search mr-1"></i> Scan Perangkat
+                        <div class="space-y-1.5" id="deviceControls"></div>
+                        <button class="btn-secondary w-full text-xs mt-2" onclick="showToast('info','🔍 Scanning...')">
+                            <i class="fas fa-search mr-1"></i> Scan
                         </button>
                     </div>
 
@@ -1314,19 +1504,19 @@
         <!-- ============================================================ -->
         <div id="page-history" class="page-content">
             <div class="page-history-content">
-                <div class="card-premium" style="flex:1; display:flex; flex-direction:column; min-height:0; padding:12px 16px;">
+                <div class="card-premium" style="flex:1; display:flex; flex-direction:column; min-height:0; padding:10px 12px;">
 
                     <div class="flex flex-wrap items-center justify-between mb-2 flex-shrink-0">
                         <div>
-                            <h3 class="text-white font-semibold text-sm">📜 Riwayat Data Lengkap</h3>
-                            <p class="text-[9px] text-gray-500">Semua data historis tersimpan</p>
+                            <h3 class="text-white font-semibold text-sm">📜 Riwayat</h3>
+                            <p class="text-[8px] text-gray-500">Semua data historis</p>
                         </div>
                         <div class="flex gap-1.5 flex-wrap">
-                            <button class="btn-secondary text-[9px]" onclick="exportCSV()">
-                                <i class="fas fa-file-csv mr-0.5"></i> Export CSV
+                            <button class="btn-secondary text-[8px]" onclick="exportCSV()">
+                                <i class="fas fa-file-csv mr-0.5"></i> CSV
                             </button>
-                            <button class="btn-danger text-[9px]" onclick="clearAllHistory()">
-                                <i class="fas fa-trash mr-0.5"></i> Hapus Semua
+                            <button class="btn-danger text-[8px]" onclick="clearAllHistory()">
+                                <i class="fas fa-trash mr-0.5"></i> Hapus
                             </button>
                         </div>
                     </div>
@@ -1336,11 +1526,10 @@
                             <thead class="sticky top-0" style="background:rgba(10,14,26,0.95); z-index:5;">
                                 <tr>
                                     <th class="text-left">Tanggal</th>
-                                    <th class="text-right">Daya (W)</th>
-                                    <th class="text-right">Tegangan (V)</th>
-                                    <th class="text-right">Arus (A)</th>
-                                    <th class="text-right">Cahaya (Lux)</th>
-                                    <th class="text-right">Suhu (°C)</th>
+                                    <th class="text-right">Daya</th>
+                                    <th class="text-right">Teg</th>
+                                    <th class="text-right">Arus</th>
+                                    <th class="text-right">Cahaya</th>
                                     <th class="text-center">Status</th>
                                 </tr>
                             </thead>
@@ -1357,65 +1546,65 @@
         <!-- ============================================================ -->
         <div id="page-alerts" class="page-content">
             <div class="page-full">
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 gap-3">
 
                     <div class="card-premium">
-                        <h3 class="text-white font-semibold text-sm mb-2">🔔 Notifikasi Terkini</h3>
+                        <h3 class="text-white font-semibold text-sm mb-2">🔔 Notifikasi</h3>
                         <div class="space-y-1.5" id="alertList">
                             <div class="flex items-start gap-2 p-2 bg-yellow-500/10 rounded-lg border border-yellow-500/10">
-                                <div class="w-6 h-6 rounded-full bg-yellow-500/20 flex items-center justify-center text-yellow-400 text-xs flex-shrink-0">⚠️</div>
+                                <div class="w-5 h-5 rounded-full bg-yellow-500/20 flex items-center justify-center text-yellow-400 text-[10px] flex-shrink-0">⚠️</div>
                                 <div>
                                     <p class="text-white text-xs">Efisiensi menurun 7%</p>
-                                    <p class="text-[8px] text-gray-500">Panel perlu dibersihkan · 2 jam lalu</p>
+                                    <p class="text-[7px] text-gray-500">Panel perlu dibersihkan · 2 jam lalu</p>
                                 </div>
                             </div>
                             <div class="flex items-start gap-2 p-2 bg-blue-500/10 rounded-lg border border-blue-500/10">
-                                <div class="w-6 h-6 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 text-xs flex-shrink-0">ℹ️</div>
+                                <div class="w-5 h-5 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 text-[10px] flex-shrink-0">ℹ️</div>
                                 <div>
                                     <p class="text-white text-xs">Produksi energi puncak</p>
-                                    <p class="text-[8px] text-gray-500">34.2 W tercapai · 3 jam lalu</p>
+                                    <p class="text-[7px] text-gray-500">34.2 W · 3 jam lalu</p>
                                 </div>
                             </div>
                             <div class="flex items-start gap-2 p-2 bg-green-500/10 rounded-lg border border-green-500/10">
-                                <div class="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center text-green-400 text-xs flex-shrink-0">✅</div>
+                                <div class="w-5 h-5 rounded-full bg-green-500/20 flex items-center justify-center text-green-400 text-[10px] flex-shrink-0">✅</div>
                                 <div>
-                                    <p class="text-white text-xs">Sistem berjalan normal</p>
-                                    <p class="text-[8px] text-gray-500">Semua sensor online · 5 jam lalu</p>
+                                    <p class="text-white text-xs">Sistem normal</p>
+                                    <p class="text-[7px] text-gray-500">Semua sensor online · 5 jam lalu</p>
                                 </div>
                             </div>
                             <div class="flex items-start gap-2 p-2 bg-red-500/10 rounded-lg border border-red-500/10">
-                                <div class="w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center text-red-400 text-xs flex-shrink-0">❌</div>
+                                <div class="w-5 h-5 rounded-full bg-red-500/20 flex items-center justify-center text-red-400 text-[10px] flex-shrink-0">❌</div>
                                 <div>
                                     <p class="text-white text-xs">Sensor cuaca offline</p>
-                                    <p class="text-[8px] text-gray-500">Periksa koneksi · 8 jam lalu</p>
+                                    <p class="text-[7px] text-gray-500">Periksa koneksi · 8 jam lalu</p>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <div class="card-premium">
-                        <h3 class="text-white font-semibold text-sm mb-2">⚙️ Pengaturan Notifikasi</h3>
+                        <h3 class="text-white font-semibold text-sm mb-2">⚙️ Pengaturan</h3>
                         <div class="space-y-2">
                             <div class="flex items-center justify-between p-2 bg-white/5 rounded-lg">
                                 <div>
-                                    <p class="text-white text-xs">Notifikasi Email</p>
-                                    <p class="text-[8px] text-gray-500">admin@solarwatch.id</p>
+                                    <p class="text-white text-xs">Email</p>
+                                    <p class="text-[7px] text-gray-500">admin@solarwatch.id</p>
                                 </div>
-                                <button class="btn-primary text-[9px] px-3 py-1" onclick="toggleNotification('email')" id="emailNotifBtn">Aktif</button>
+                                <button class="btn-primary text-[8px] px-3 py-1" onclick="toggleNotification('email')" id="emailNotifBtn">Aktif</button>
                             </div>
                             <div class="flex items-center justify-between p-2 bg-white/5 rounded-lg">
                                 <div>
-                                    <p class="text-white text-xs">Notifikasi SMS</p>
-                                    <p class="text-[8px] text-gray-500">+62 812-3456-7890</p>
+                                    <p class="text-white text-xs">SMS</p>
+                                    <p class="text-[7px] text-gray-500">+62 812-3456-7890</p>
                                 </div>
-                                <button class="btn-secondary text-[9px] px-3 py-1" onclick="toggleNotification('sms')" id="smsNotifBtn">Nonaktif</button>
+                                <button class="btn-secondary text-[8px] px-3 py-1" onclick="toggleNotification('sms')" id="smsNotifBtn">Nonaktif</button>
                             </div>
                             <div class="flex items-center justify-between p-2 bg-white/5 rounded-lg">
                                 <div>
-                                    <p class="text-white text-xs">Notifikasi Push</p>
-                                    <p class="text-[8px] text-gray-500">Aplikasi Mobile</p>
+                                    <p class="text-white text-xs">Push</p>
+                                    <p class="text-[7px] text-gray-500">Aplikasi Mobile</p>
                                 </div>
-                                <button class="btn-primary text-[9px] px-3 py-1" onclick="toggleNotification('push')" id="pushNotifBtn">Aktif</button>
+                                <button class="btn-primary text-[8px] px-3 py-1" onclick="toggleNotification('push')" id="pushNotifBtn">Aktif</button>
                             </div>
                             <button class="btn-primary w-full text-xs mt-1" onclick="openAdvancedSettings()">
                                 <i class="fas fa-sliders-h mr-1"></i> Pengaturan Lanjutan
@@ -1432,22 +1621,22 @@
         <!-- ============================================================ -->
         <div id="page-settings" class="page-content">
             <div class="page-full">
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 gap-3">
 
                     <div class="card-premium">
                         <h3 class="text-white font-semibold text-sm mb-2">⚙️ Pengaturan Umum</h3>
                         <div class="space-y-2">
                             <div>
                                 <label class="text-gray-400 text-xs">Nama Sistem</label>
-                                <input type="text" id="systemName" value="SolarWatch Pro" class="w-full mt-0.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-emerald-500/50">
+                                <input type="text" id="systemName" value="SolarWatch Pro" class="w-full mt-0.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs" />
                             </div>
                             <div>
                                 <label class="text-gray-400 text-xs">Broker MQTT</label>
-                                <input type="text" id="mqttBroker" value="wss://broker.emqx.io:8084/mqtt" class="w-full mt-0.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-emerald-500/50">
+                                <input type="text" id="mqttBroker" value="wss://broker.emqx.io:8084/mqtt" class="w-full mt-0.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs" />
                             </div>
                             <div>
                                 <label class="text-gray-400 text-xs">Interval Update</label>
-                                <select id="updateInterval" class="w-full mt-0.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-emerald-500/50">
+                                <select id="updateInterval" class="w-full mt-0.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs">
                                     <option value="1">1 detik</option>
                                     <option value="2" selected>2 detik</option>
                                     <option value="5">5 detik</option>
@@ -1455,7 +1644,7 @@
                                 </select>
                             </div>
                             <button class="btn-primary w-full text-xs" onclick="saveSettings()">
-                                <i class="fas fa-save mr-1"></i> Simpan Pengaturan
+                                <i class="fas fa-save mr-1"></i> Simpan
                             </button>
                         </div>
                     </div>
@@ -1465,36 +1654,36 @@
                         <div class="space-y-2">
                             <div>
                                 <label class="text-gray-400 text-xs">Username</label>
-                                <input type="text" id="securityUsername" value="admin" class="w-full mt-0.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-emerald-500/50">
+                                <input type="text" id="securityUsername" value="admin" class="w-full mt-0.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs" />
                             </div>
                             <div>
                                 <label class="text-gray-400 text-xs">Password Baru</label>
-                                <input type="password" id="securityPassword" placeholder="Kosongkan jika tidak diubah" class="w-full mt-0.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-emerald-500/50">
+                                <input type="password" id="securityPassword" placeholder="Kosongkan jika tidak diubah" class="w-full mt-0.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs" />
                             </div>
                             <div>
                                 <label class="text-gray-400 text-xs">API Key</label>
-                                <input type="text" id="apiKey" value="sk_live_xxxxx" class="w-full mt-0.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-emerald-500/50">
+                                <input type="text" id="apiKey" value="sk_live_xxxxx" class="w-full mt-0.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs" />
                             </div>
                             <button class="btn-primary w-full text-xs" onclick="updateSecurity()">
-                                <i class="fas fa-lock mr-1"></i> Perbarui Keamanan
+                                <i class="fas fa-lock mr-1"></i> Perbarui
                             </button>
                         </div>
                     </div>
 
-                    <div class="lg:col-span-2 card-premium">
+                    <div class="card-premium">
                         <h3 class="text-white font-semibold text-sm mb-2">📊 Tentang Sistem</h3>
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <div class="grid grid-cols-3 gap-2">
                             <div class="bg-white/5 rounded-lg p-2 text-center">
-                                <p class="text-[10px] text-gray-400">Versi</p>
+                                <p class="text-[8px] text-gray-400">Versi</p>
                                 <p class="text-white font-bold text-sm">v3.0.1</p>
                             </div>
                             <div class="bg-white/5 rounded-lg p-2 text-center">
-                                <p class="text-[10px] text-gray-400">Terakhir Update</p>
+                                <p class="text-[8px] text-gray-400">Update</p>
                                 <p class="text-white font-bold text-sm" id="settingsUpdate">--</p>
                             </div>
                             <div class="bg-white/5 rounded-lg p-2 text-center">
-                                <p class="text-[10px] text-gray-400">Status</p>
-                                <p class="text-emerald-400 font-bold text-sm"><i class="fas fa-circle text-[6px] mr-1"></i> Stabil</p>
+                                <p class="text-[8px] text-gray-400">Status</p>
+                                <p class="text-emerald-400 font-bold text-sm"><i class="fas fa-circle text-[5px] mr-1"></i> Stabil</p>
                             </div>
                         </div>
                     </div>
@@ -1508,18 +1697,16 @@
         <!-- ============================================================ -->
         <div id="page-users" class="page-content">
             <div class="page-full">
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 gap-3">
 
                     <div class="card-premium">
                         <div class="flex items-center justify-between mb-3">
                             <h3 class="text-white font-semibold text-sm">👥 Daftar User</h3>
                             <button class="btn-primary text-[10px] px-3 py-1.5" onclick="openAddUserModal()">
-                                <i class="fas fa-plus mr-1"></i> Tambah User
+                                <i class="fas fa-plus mr-1"></i> Tambah
                             </button>
                         </div>
-                        <div class="user-list space-y-1.5" id="userList">
-                            <!-- Diisi JS -->
-                        </div>
+                        <div class="user-list space-y-1" id="userList"></div>
                     </div>
 
                     <div class="card-premium">
@@ -1532,10 +1719,6 @@
                             <div class="p-3 bg-white/5 rounded-lg">
                                 <p class="text-white text-xs font-medium">User Aktif</p>
                                 <p class="text-2xl font-bold text-green-400" id="activeUsers">1</p>
-                            </div>
-                            <div class="p-3 bg-white/5 rounded-lg">
-                                <p class="text-white text-xs font-medium">Terakhir Login</p>
-                                <p class="text-sm text-gray-400" id="lastLogin">Hari ini, 14:30</p>
                             </div>
                             <button class="btn-secondary w-full text-xs" onclick="showToast('info','📋 Log akses user...')">
                                 <i class="fas fa-history mr-1"></i> Lihat Log Akses
@@ -1550,12 +1733,14 @@
     </div>
 
     <!-- ============================================================ -->
-    <!-- MODAL: Tambah User -->
+    <!-- MODALS -->
     <!-- ============================================================ -->
+
+    <!-- Add User Modal -->
     <div class="modal-overlay" id="addUserModal">
         <div class="modal-box">
             <div class="flex items-center justify-between mb-4">
-                <h3 class="text-white font-semibold text-lg">👤 Tambah User Baru</h3>
+                <h3 class="text-white font-semibold text-lg">👤 Tambah User</h3>
                 <button onclick="closeModal('addUserModal')" class="text-gray-400 hover:text-white transition text-xl">&times;</button>
             </div>
             <form id="addUserForm" onsubmit="addUser(event)">
@@ -1580,19 +1765,17 @@
                     </select>
                 </div>
                 <button type="submit" class="btn-primary w-full py-2 text-sm">
-                    <i class="fas fa-user-plus mr-2"></i> Tambah User
+                    <i class="fas fa-user-plus mr-2"></i> Tambah
                 </button>
             </form>
         </div>
     </div>
 
-    <!-- ============================================================ -->
-    <!-- MODAL: Tambah Perangkat -->
-    <!-- ============================================================ -->
+    <!-- Add Device Modal -->
     <div class="modal-overlay" id="addDeviceModal">
         <div class="modal-box">
             <div class="flex items-center justify-between mb-4">
-                <h3 class="text-white font-semibold text-lg">🛠️ Tambah Perangkat Kontrol</h3>
+                <h3 class="text-white font-semibold text-lg">🛠️ Tambah Perangkat</h3>
                 <button onclick="closeModal('addDeviceModal')" class="text-gray-400 hover:text-white transition text-xl">&times;</button>
             </div>
             <form id="addDeviceForm" onsubmit="addDevice(event)">
@@ -1601,50 +1784,48 @@
                     <input type="text" id="newDeviceName" placeholder="Contoh: Lampu Gudang" required />
                 </div>
                 <div class="mb-3">
-                    <label class="text-gray-400 text-sm">Tipe Perangkat</label>
+                    <label class="text-gray-400 text-sm">Tipe</label>
                     <select id="newDeviceType" required>
                         <option value="switch">Switch (ON/OFF)</option>
-                        <option value="toggle">Toggle (Aktif/Nonaktif)</option>
-                        <option value="button">Button (Momentary)</option>
-                        <option value="slider">Slider (Nilai 0-100)</option>
+                        <option value="toggle">Toggle</option>
+                        <option value="button">Button</option>
+                        <option value="slider">Slider</option>
                     </select>
                 </div>
                 <div class="mb-3">
                     <label class="text-gray-400 text-sm">MQTT Topic</label>
-                    <input type="text" id="newDeviceTopic" placeholder="solarwatch/device/namadevice" required />
+                    <input type="text" id="newDeviceTopic" placeholder="solarwatch/device/..." required />
                 </div>
                 <div class="mb-3">
-                    <label class="text-gray-400 text-sm">Icon (FontAwesome)</label>
+                    <label class="text-gray-400 text-sm">Icon</label>
                     <input type="text" id="newDeviceIcon" placeholder="fa-lightbulb" value="fa-microchip" />
                 </div>
                 <div class="mb-3">
-                    <label class="text-gray-400 text-sm">Warna (Hex)</label>
+                    <label class="text-gray-400 text-sm">Warna</label>
                     <input type="color" id="newDeviceColor" value="#34d399" class="w-12 h-10 rounded-lg cursor-pointer" />
                 </div>
                 <div class="mb-3 flex items-center gap-3">
-                    <label class="text-gray-400 text-sm">Status Awal:</label>
+                    <label class="text-gray-400 text-sm">Status:</label>
                     <select id="newDeviceStatus" class="flex-1">
                         <option value="online">Online</option>
                         <option value="offline">Offline</option>
                     </select>
                 </div>
                 <button type="submit" class="btn-primary w-full py-2 text-sm">
-                    <i class="fas fa-plus-circle mr-2"></i> Tambah Perangkat
+                    <i class="fas fa-plus-circle mr-2"></i> Tambah
                 </button>
             </form>
         </div>
     </div>
 
-    <!-- ============================================================ -->
-    <!-- MODAL: Analisis Lengkap -->
-    <!-- ============================================================ -->
+    <!-- Analytics Detail Modal -->
     <div class="modal-overlay" id="analyticsDetailModal">
         <div class="modal-box" style="max-width:700px;">
             <div class="flex items-center justify-between mb-4">
-                <h3 class="text-white font-semibold text-lg">📊 Analisis Performa Lengkap</h3>
+                <h3 class="text-white font-semibold text-lg">📊 Analisis Lengkap</h3>
                 <button onclick="closeModal('analyticsDetailModal')" class="text-gray-400 hover:text-white transition text-xl">&times;</button>
             </div>
-            <div style="height:250px;">
+            <div style="height:200px;">
                 <canvas id="analyticsDetailChart"></canvas>
             </div>
             <div class="grid grid-cols-3 gap-2 mt-3">
@@ -1665,9 +1846,7 @@
         </div>
     </div>
 
-    <!-- ============================================================ -->
-    <!-- MODAL: Pengaturan Lanjutan -->
-    <!-- ============================================================ -->
+    <!-- Advanced Settings Modal -->
     <div class="modal-overlay" id="advancedSettingsModal">
         <div class="modal-box">
             <div class="flex items-center justify-between mb-4">
@@ -1676,23 +1855,23 @@
             </div>
             <div class="space-y-3">
                 <div>
-                    <label class="text-gray-400 text-sm">Ambang Batas Daya Minimum</label>
+                    <label class="text-gray-400 text-sm">Daya Minimum</label>
                     <input type="number" id="thresholdMin" value="5" class="w-full mt-0.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs" />
                 </div>
                 <div>
-                    <label class="text-gray-400 text-sm">Ambang Batas Daya Maksimum</label>
+                    <label class="text-gray-400 text-sm">Daya Maksimum</label>
                     <input type="number" id="thresholdMax" value="45" class="w-full mt-0.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs" />
                 </div>
                 <div>
-                    <label class="text-gray-400 text-sm">Email Penerima Notifikasi</label>
+                    <label class="text-gray-400 text-sm">Email Notifikasi</label>
                     <input type="email" id="notifEmail" value="admin@solarwatch.id" class="w-full mt-0.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs" />
                 </div>
                 <div>
-                    <label class="text-gray-400 text-sm">Nomor WhatsApp</label>
+                    <label class="text-gray-400 text-sm">WhatsApp</label>
                     <input type="text" id="notifWhatsapp" value="6281234567890" class="w-full mt-0.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs" />
                 </div>
                 <button class="btn-primary w-full text-sm" onclick="saveAdvancedSettings()">
-                    <i class="fas fa-save mr-2"></i> Simpan Pengaturan
+                    <i class="fas fa-save mr-2"></i> Simpan
                 </button>
             </div>
         </div>
@@ -1710,62 +1889,30 @@
     <!-- ============================================================ -->
     <script>
         // ============================================================
-        // 1. DATA & STATE
+        // 1. SIDEBAR TOGGLE
         // ============================================================
 
-        // User data (disimpan di localStorage)
-        let users = JSON.parse(localStorage.getItem('solarwatch_users')) || [
-            { id: 1, username: 'admin', email: 'admin@solarwatch.id', password: 'admin123', role: 'admin' }
-        ];
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
 
-        let currentUser = JSON.parse(sessionStorage.getItem('solarwatch_current_user')) || null;
-
-        // Device states
-        let deviceStates = {
-            pump: { status: 'Aktif', active: true },
-            fan: { status: 'Otomatis', active: true },
-            light: { status: 'Mati', active: false },
-        };
-
-        // Notification states
-        let notifStates = {
-            email: true,
-            sms: false,
-            push: true,
-        };
-
-        // History data
-        let historyData = [];
-        let historyCounter = 0;
-
-        // ============================================================
-        // 2. DATA PERANGKAT KONTROL (disimpan di localStorage)
-        // ============================================================
-
-        let customDevices = JSON.parse(localStorage.getItem('solarwatch_devices')) || [
-            { id: 'pump', name: 'Pompa Irigasi', type: 'switch', topic: 'solarwatch/device/pump', icon: 'fa-water',
-                color: '#34d399', status: 'online', state: true, stateLabel: 'Aktif' },
-            { id: 'fan', name: 'Kipas Pendingin', type: 'toggle', topic: 'solarwatch/device/fan', icon: 'fa-fan',
-                color: '#fbbf24', status: 'online', state: true, stateLabel: 'Otomatis' },
-            { id: 'light', name: 'Pencahayaan', type: 'switch', topic: 'solarwatch/device/light', icon: 'fa-lightbulb',
-                color: '#f59e0b', status: 'online', state: false, stateLabel: 'Mati' }
-        ];
-
-        // ============================================================
-        // 3. FUNGSI UTILITY
-        // ============================================================
-
-        function saveUsers() {
-            localStorage.setItem('solarwatch_users', JSON.stringify(users));
+            if (window.innerWidth < 768) {
+                sidebar.classList.toggle('open');
+                overlay.classList.toggle('active');
+            }
         }
 
-        function saveHistory() {
-            localStorage.setItem('solarwatch_history', JSON.stringify(historyData));
-        }
+        // Close sidebar on resize to desktop
+        window.addEventListener('resize', function() {
+            if (window.innerWidth >= 768) {
+                document.getElementById('sidebar').classList.remove('open');
+                document.getElementById('sidebarOverlay').classList.remove('active');
+            }
+        });
 
-        function saveDevices() {
-            localStorage.setItem('solarwatch_devices', JSON.stringify(customDevices));
-        }
+        // ============================================================
+        // 2. TOAST
+        // ============================================================
 
         function showToast(type, message) {
             const toast = document.getElementById('toast');
@@ -1776,6 +1923,56 @@
             clearTimeout(toast._timeout);
             toast._timeout = setTimeout(() => toast.classList.remove('show'), 3000);
         }
+
+        // ============================================================
+        // 3. NAVIGASI
+        // ============================================================
+
+        const pageTitles = {
+            dashboard: 'Dashboard',
+            analytics: 'Analytics',
+            devices: 'Devices',
+            history: 'History',
+            alerts: 'Alerts',
+            settings: 'Settings',
+            users: 'Users'
+        };
+
+        let currentPage = 'dashboard';
+
+        function navigateTo(page) {
+            // Update sidebar
+            document.querySelectorAll('.sidebar-link').forEach(el => el.classList.remove('active'));
+            const link = document.querySelector(`.sidebar-link[data-page="${page}"]`);
+            if (link) link.classList.add('active');
+
+            // Update content
+            document.querySelectorAll('.page-content').forEach(el => el.classList.remove('active'));
+            const content = document.getElementById('page-' + page);
+            if (content) content.classList.add('active');
+
+            document.getElementById('pageTitle').textContent = pageTitles[page] || page;
+            currentPage = page;
+
+            // Close sidebar on mobile
+            if (window.innerWidth < 768) {
+                document.getElementById('sidebar').classList.remove('open');
+                document.getElementById('sidebarOverlay').classList.remove('active');
+            }
+
+            // Refresh data
+            if (page === 'dashboard') updateDashboard();
+            if (page === 'analytics') updateAnalytics();
+            if (page === 'history') renderFullHistory();
+            if (page === 'users') renderUsers();
+            if (page === 'devices') renderDevices();
+
+            addLog('📄 Buka: ' + pageTitles[page], 'info');
+        }
+
+        // ============================================================
+        // 4. FUNGSI UTILITY
+        // ============================================================
 
         function closeModal(id) {
             document.getElementById(id).classList.remove('active');
@@ -1798,15 +1995,38 @@
 
             const entry = document.createElement('div');
             entry.className =
-                `flex items-start gap-1.5 text-[9px] py-0.5 px-1 rounded hover:bg-white/5 transition ${colors[type] || 'text-gray-300'}`;
+                `flex items-start gap-1 text-[7px] py-0.5 px-1 rounded hover:bg-white/5 transition ${colors[type] || 'text-gray-300'}`;
             entry.innerHTML =
                 `<span class="text-gray-600 flex-shrink-0">${time}</span><span>${icons[type] || '•'} ${message}</span>`;
             container.prepend(entry);
 
-            while (container.children.length > 25) container.removeChild(container.lastChild);
+            while (container.children.length > 20) container.removeChild(container.lastChild);
         }
 
-        // Generate dummy history
+        // ============================================================
+        // 5. DATA
+        // ============================================================
+
+        // Users
+        let users = JSON.parse(localStorage.getItem('solarwatch_users')) || [
+            { id: 1, username: 'admin', email: 'admin@solarwatch.id', password: 'admin123', role: 'admin' }
+        ];
+        let currentUser = JSON.parse(sessionStorage.getItem('solarwatch_current_user')) || null;
+
+        // Devices
+        let customDevices = JSON.parse(localStorage.getItem('solarwatch_devices')) || [
+            { id: 'pump', name: 'Pompa Irigasi', type: 'switch', topic: 'solarwatch/device/pump', icon: 'fa-water',
+                color: '#34d399', status: 'online', state: true, stateLabel: 'Aktif' },
+            { id: 'fan', name: 'Kipas Pendingin', type: 'toggle', topic: 'solarwatch/device/fan', icon: 'fa-fan',
+                color: '#fbbf24', status: 'online', state: true, stateLabel: 'Otomatis' },
+            { id: 'light', name: 'Pencahayaan', type: 'switch', topic: 'solarwatch/device/light', icon: 'fa-lightbulb',
+                color: '#f59e0b', status: 'online', state: false, stateLabel: 'Mati' }
+        ];
+
+        // History
+        let historyData = [];
+        let historyCounter = 0;
+
         function generateHistoryData() {
             const data = [];
             const now = new Date();
@@ -1817,7 +2037,6 @@
                     id: ++historyCounter,
                     time: d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
                     date: d.toLocaleDateString('id-ID'),
-                    datetime: d.toLocaleString('id-ID'),
                     power: Math.round(power * 10) / 10,
                     voltage: Math.round((17 + Math.random() * 8) * 10) / 10,
                     current: Math.round((0.5 + Math.random() * 2.5) * 100) / 100,
@@ -1832,7 +2051,7 @@
         historyData = JSON.parse(localStorage.getItem('solarwatch_history')) || generateHistoryData();
 
         // ============================================================
-        // 4. LOGIN / LOGOUT
+        // 6. LOGIN / LOGOUT
         // ============================================================
 
         function handleLogin(event) {
@@ -1871,44 +2090,23 @@
         }
 
         // ============================================================
-        // 5. NAVIGASI
+        // 7. SAVE FUNCTIONS
         // ============================================================
 
-        const pageTitles = {
-            dashboard: 'Dashboard Overview',
-            analytics: '📊 Analytics & Statistik',
-            devices: '🔌 Manajemen Perangkat',
-            history: '📜 Riwayat Data',
-            alerts: '🔔 Notifikasi & Alert',
-            settings: '⚙️ Pengaturan Sistem',
-            users: '👥 Manajemen User'
-        };
+        function saveUsers() {
+            localStorage.setItem('solarwatch_users', JSON.stringify(users));
+        }
 
-        let currentPage = 'dashboard';
+        function saveHistory() {
+            localStorage.setItem('solarwatch_history', JSON.stringify(historyData));
+        }
 
-        function navigateTo(page) {
-            document.querySelectorAll('.sidebar-link').forEach(el => el.classList.remove('active'));
-            const link = document.querySelector(`.sidebar-link[data-page="${page}"]`);
-            if (link) link.classList.add('active');
-
-            document.querySelectorAll('.page-content').forEach(el => el.classList.remove('active'));
-            const content = document.getElementById('page-' + page);
-            if (content) content.classList.add('active');
-
-            document.getElementById('pageTitle').textContent = pageTitles[page] || page;
-            currentPage = page;
-
-            if (page === 'dashboard') updateDashboard();
-            if (page === 'analytics') updateAnalytics();
-            if (page === 'history') renderFullHistory();
-            if (page === 'users') renderUsers();
-            if (page === 'devices') renderDevices();
-
-            addLog('📄 Buka: ' + pageTitles[page], 'info');
+        function saveDevices() {
+            localStorage.setItem('solarwatch_devices', JSON.stringify(customDevices));
         }
 
         // ============================================================
-        // 6. DASHBOARD
+        // 8. DASHBOARD - CHART INIT
         // ============================================================
 
         let mainChart = null;
@@ -1951,7 +2149,7 @@
                         tension: 0.4,
                         pointRadius: 1.5,
                         pointBackgroundColor: '#34d399',
-                        borderWidth: 2,
+                        borderWidth: 1.5,
                     }, {
                         label: 'Tegangan (V)',
                         data: chartVoltage,
@@ -1978,13 +2176,13 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { display: false }, tooltip: { backgroundColor: 'rgba(10,14,26,0.9)',
+                    plugins: { legend: { display: false }, tooltip: { backgroundColor: 'rgba(10,14,26,0.8)',
                             titleColor: '#e2e8f0', bodyColor: '#cbd5e1', borderColor: 'rgba(255,255,255,0.05)',
                             borderWidth: 1 } },
                     scales: {
-                        x: { grid: { color: 'rgba(255,255,255,0.02)' }, ticks: { color: '#64748b', font: { size: 8 } },
-                            maxTicksLimit: 10 },
-                        y: { grid: { color: 'rgba(255,255,255,0.02)' }, ticks: { color: '#64748b', font: { size: 8 } },
+                        x: { grid: { color: 'rgba(255,255,255,0.02)' }, ticks: { color: '#64748b', font: { size: 7 } },
+                            maxTicksLimit: 8 },
+                        y: { grid: { color: 'rgba(255,255,255,0.02)' }, ticks: { color: '#64748b', font: { size: 7 } },
                             beginAtZero: true }
                     },
                     interaction: { intersect: false, mode: 'index' }
@@ -2010,18 +2208,18 @@
                         tension: 0.4,
                         pointRadius: 2,
                         pointBackgroundColor: '#a78bfa',
-                        borderWidth: 2,
+                        borderWidth: 1.5,
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { display: false }, tooltip: { backgroundColor: 'rgba(10,14,26,0.9)',
+                    plugins: { legend: { display: false }, tooltip: { backgroundColor: 'rgba(10,14,26,0.8)',
                             titleColor: '#e2e8f0', bodyColor: '#cbd5e1', borderColor: 'rgba(255,255,255,0.05)',
                             borderWidth: 1, callbacks: { label: ctx => ctx.parsed.y + ' kWh' } } },
                     scales: {
-                        x: { grid: { display: false }, ticks: { color: '#64748b', font: { size: 7 } } },
-                        y: { grid: { display: false }, ticks: { color: '#64748b', font: { size: 7 } },
+                        x: { grid: { display: false }, ticks: { color: '#64748b', font: { size: 6 } } },
+                        y: { grid: { display: false }, ticks: { color: '#64748b', font: { size: 6 } },
                         beginAtZero: true }
                     },
                     interaction: { intersect: false, mode: 'index' }
@@ -2049,12 +2247,12 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { display: false }, tooltip: { backgroundColor: 'rgba(10,14,26,0.9)',
+                    plugins: { legend: { display: false }, tooltip: { backgroundColor: 'rgba(10,14,26,0.8)',
                             titleColor: '#e2e8f0', bodyColor: '#cbd5e1', borderColor: 'rgba(255,255,255,0.05)',
                             borderWidth: 1 } },
                     scales: {
-                        x: { grid: { color: 'rgba(255,255,255,0.02)' }, ticks: { color: '#64748b', font: { size: 8 } } },
-                        y: { grid: { color: 'rgba(255,255,255,0.02)' }, ticks: { color: '#64748b', font: { size: 8 } },
+                        x: { grid: { color: 'rgba(255,255,255,0.02)' }, ticks: { color: '#64748b', font: { size: 7 } } },
+                        y: { grid: { color: 'rgba(255,255,255,0.02)' }, ticks: { color: '#64748b', font: { size: 7 } },
                             beginAtZero: true }
                     }
                 }
@@ -2069,10 +2267,7 @@
                     datasets: [{
                         label: 'Energi (kWh)',
                         data: [2.1, 2.8, 3.4, 3.9, 4.2, 3.7, 2.9],
-                        backgroundColor: ['rgba(52,211,153,0.7)', 'rgba(52,211,153,0.7)',
-                            'rgba(52,211,153,0.7)', 'rgba(52,211,153,0.7)', 'rgba(52,211,153,0.7)',
-                            'rgba(52,211,153,0.7)', 'rgba(52,211,153,0.7)'
-                        ],
+                        backgroundColor: 'rgba(52,211,153,0.6)',
                         borderColor: '#34d399',
                         borderWidth: 1,
                         borderRadius: 4,
@@ -2081,12 +2276,12 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { display: false }, tooltip: { backgroundColor: 'rgba(10,14,26,0.9)',
+                    plugins: { legend: { display: false }, tooltip: { backgroundColor: 'rgba(10,14,26,0.8)',
                             titleColor: '#e2e8f0', bodyColor: '#cbd5e1', borderColor: 'rgba(255,255,255,0.05)',
                             borderWidth: 1, callbacks: { label: ctx => ctx.parsed.y + ' kWh' } } },
                     scales: {
-                        x: { grid: { display: false }, ticks: { color: '#64748b', font: { size: 8 } } },
-                        y: { grid: { color: 'rgba(255,255,255,0.02)' }, ticks: { color: '#64748b', font: { size: 8 } },
+                        x: { grid: { display: false }, ticks: { color: '#64748b', font: { size: 7 } } },
+                        y: { grid: { color: 'rgba(255,255,255,0.02)' }, ticks: { color: '#64748b', font: { size: 7 } },
                             beginAtZero: true }
                     }
                 }
@@ -2108,6 +2303,10 @@
             changeEl.textContent = (change >= 0 ? '+' : '') + change.toFixed(1) + '%';
             changeEl.className = 'stat-value ' + (change >= 0 ? 'text-emerald-400' : 'text-red-400');
         }
+
+        // ============================================================
+        // 9. UPDATE DASHBOARD
+        // ============================================================
 
         function updateDashboard() {
             const now = new Date();
@@ -2144,11 +2343,11 @@
 
             const badge = document.getElementById('statusBadge');
             if (eff > 80) { badge.textContent = 'Optimal';
-                badge.className = 'text-[9px] px-2 py-0.5 rounded-full badge-green'; } else if (eff > 65) { badge
+                badge.className = 'text-[7px] px-1.5 py-0.5 rounded-full badge-green'; } else if (eff > 65) { badge
                     .textContent = 'Normal';
-                badge.className = 'text-[9px] px-2 py-0.5 rounded-full badge-yellow'; } else { badge.textContent =
+                badge.className = 'text-[7px] px-1.5 py-0.5 rounded-full badge-yellow'; } else { badge.textContent =
                     'Perhatian';
-                badge.className = 'text-[9px] px-2 py-0.5 rounded-full badge-red'; }
+                badge.className = 'text-[7px] px-1.5 py-0.5 rounded-full badge-red'; }
 
             document.getElementById('headerTime').textContent = now.toLocaleString('id-ID');
 
@@ -2186,7 +2385,6 @@
                 id: ++historyCounter,
                 time: time,
                 date: now.toLocaleDateString('id-ID'),
-                datetime: now.toLocaleString('id-ID'),
                 power: Math.round(power * 10) / 10,
                 voltage: Math.round(voltage * 10) / 10,
                 current: Math.round(current * 100) / 100,
@@ -2216,7 +2414,7 @@
                 const icon = val >= 0 ? 'fa-arrow-up' : 'fa-arrow-down';
                 const cls = val >= 0 ? 'badge-green' : 'badge-red';
                 el.innerHTML = `<i class="fas ${icon} mr-0.5"></i> ${Math.abs(val).toFixed(1)}%`;
-                el.className = `text-[9px] px-1.5 py-0.5 rounded-full ${cls} font-medium`;
+                el.className = `text-[7px] px-1 py-0.5 rounded-full ${cls} font-medium`;
             });
         }
 
@@ -2229,13 +2427,13 @@
         function clearLogs() {
             const container = document.getElementById('logContainer');
             if (container) {
-                container.innerHTML = `<div class="text-center text-gray-500 text-[9px] py-1">Log kosong</div>`;
+                container.innerHTML = `<div class="text-center text-gray-500 text-[7px] py-0.5">Log kosong</div>`;
                 showToast('info', '🗑️ Log dihapus');
             }
         }
 
         // ============================================================
-        // 7. ANALYTICS
+        // 10. ANALYTICS
         // ============================================================
 
         let analyticsFilter = 'weekly';
@@ -2292,8 +2490,8 @@
                 analyticsChart.update();
             }
 
-            showToast('info', '📊 Menampilkan data ' + labels[filter]);
-            addLog('📊 Filter analytics: ' + labels[filter], 'info');
+            showToast('info', '📊 ' + labels[filter]);
+            addLog('📊 Filter: ' + labels[filter], 'info');
         }
 
         function openAnalyticsDetail() {
@@ -2316,7 +2514,7 @@
         }
 
         // ============================================================
-        // 8. DEVICES - RENDER
+        // 11. DEVICES
         // ============================================================
 
         function renderDevices() {
@@ -2333,7 +2531,6 @@
             if (onlineEl) onlineEl.textContent = onlineCount + ' online';
             if (badgeEl) badgeEl.textContent = customDevices.length;
 
-            // Render daftar perangkat
             listContainer.innerHTML = customDevices.map(d => {
                 const statusClass = d.status === 'online' ? 'badge-green' : 'badge-red';
                 const statusText = d.status === 'online' ? 'Online' : 'Offline';
@@ -2342,25 +2539,25 @@
                 const isDeletable = !['pump', 'fan', 'light'].includes(d.id);
 
                 return `
-                    <div class="device-item flex items-center justify-between p-2 bg-white/5 rounded-lg" data-device="${d.id}">
-                        <div class="flex items-center gap-2">
-                            <div class="w-7 h-7 rounded-lg flex items-center justify-center text-xs" style="background:${color}20; color:${color}">
+                    <div class="device-item flex items-center justify-between p-1.5 bg-white/5 rounded-lg" data-device="${d.id}">
+                        <div class="flex items-center gap-1.5">
+                            <div class="w-5 h-5 rounded-lg flex items-center justify-center text-[8px]" style="background:${color}20; color:${color}">
                                 <i class="fas ${icon}"></i>
                             </div>
                             <div>
-                                <p class="text-white text-xs font-medium">${d.name}</p>
-                                <p class="text-[8px] text-gray-500">${d.type} · ${d.topic}</p>
+                                <p class="text-white text-[9px] font-medium">${d.name}</p>
+                                <p class="text-[6px] text-gray-500">${d.type}</p>
                             </div>
                         </div>
-                        <div class="flex items-center gap-1.5">
-                            <span class="text-[8px] px-1.5 py-0.5 rounded-full ${statusClass}"><i class="fas fa-circle text-[5px] mr-0.5"></i> ${statusText}</span>
-                            ${isDeletable ? `<button onclick="deleteDevice('${d.id}')" class="text-red-400 hover:text-red-300 text-xs"><i class="fas fa-trash"></i></button>` : ''}
+                        <div class="flex items-center gap-1">
+                            <span class="text-[6px] px-1 py-0.5 rounded-full ${statusClass}"><i class="fas fa-circle text-[4px] mr-0.5"></i> ${statusText}</span>
+                            ${isDeletable ? `<button onclick="deleteDevice('${d.id}')" class="text-red-400 hover:text-red-300 text-[8px]"><i class="fas fa-trash"></i></button>` : ''}
                         </div>
                     </div>
                 `;
             }).join('');
 
-            // Render kontrol perangkat
+            // Controls
             controlsContainer.innerHTML = customDevices.map(d => {
                 const isActive = d.state !== undefined ? d.state : true;
                 const statusColor = isActive ? 'text-emerald-400' : 'text-gray-400';
@@ -2371,12 +2568,12 @@
                 switch (d.type) {
                     case 'switch':
                         controlHTML = `
-                            <div class="flex items-center justify-between p-2 bg-white/5 rounded-lg">
-                                <div>
-                                    <p class="text-white text-xs font-medium">${d.name}</p>
-                                    <p class="text-[8px] text-gray-500">Status: <span class="${statusColor}" id="dev_${d.id}_status">${statusText}</span></p>
+                            <div class="flex items-center justify-between p-1.5 bg-white/5 rounded-lg">
+                                <div class="min-w-0">
+                                    <p class="text-white text-[9px] font-medium truncate">${d.name}</p>
+                                    <p class="text-[6px] text-gray-500">Status: <span class="${statusColor}" id="dev_${d.id}_status">${statusText}</span></p>
                                 </div>
-                                <button class="${isActive ? 'btn-danger' : 'btn-primary'} text-[9px] px-3 py-1" onclick="toggleCustomDevice('${d.id}')">
+                                <button class="${isActive ? 'btn-danger' : 'btn-primary'} text-[7px] px-2 py-0.5 flex-shrink-0" onclick="toggleCustomDevice('${d.id}')">
                                     <i class="fas ${isActive ? 'fa-stop' : 'fa-play'} mr-0.5"></i> 
                                     <span id="dev_${d.id}_btn">${isActive ? 'Matikan' : 'Nyalakan'}</span>
                                 </button>
@@ -2386,12 +2583,12 @@
 
                     case 'toggle':
                         controlHTML = `
-                            <div class="flex items-center justify-between p-2 bg-white/5 rounded-lg">
-                                <div>
-                                    <p class="text-white text-xs font-medium">${d.name}</p>
-                                    <p class="text-[8px] text-gray-500">Status: <span class="${statusColor}" id="dev_${d.id}_status">${statusText}</span></p>
+                            <div class="flex items-center justify-between p-1.5 bg-white/5 rounded-lg">
+                                <div class="min-w-0">
+                                    <p class="text-white text-[9px] font-medium truncate">${d.name}</p>
+                                    <p class="text-[6px] text-gray-500">Status: <span class="${statusColor}" id="dev_${d.id}_status">${statusText}</span></p>
                                 </div>
-                                <button class="btn-secondary text-[9px] px-3 py-1" onclick="toggleCustomDevice('${d.id}')">
+                                <button class="btn-secondary text-[7px] px-2 py-0.5 flex-shrink-0" onclick="toggleCustomDevice('${d.id}')">
                                     <i class="fas fa-sync-alt mr-0.5"></i> 
                                     <span id="dev_${d.id}_btn">Toggle</span>
                                 </button>
@@ -2401,12 +2598,12 @@
 
                     case 'button':
                         controlHTML = `
-                            <div class="flex items-center justify-between p-2 bg-white/5 rounded-lg">
-                                <div>
-                                    <p class="text-white text-xs font-medium">${d.name}</p>
-                                    <p class="text-[8px] text-gray-500">Momentary · Kirim sinyal</p>
+                            <div class="flex items-center justify-between p-1.5 bg-white/5 rounded-lg">
+                                <div class="min-w-0">
+                                    <p class="text-white text-[9px] font-medium truncate">${d.name}</p>
+                                    <p class="text-[6px] text-gray-500">Kirim sinyal</p>
                                 </div>
-                                <button class="btn-primary text-[9px] px-3 py-1" onclick="triggerCustomDevice('${d.id}')">
+                                <button class="btn-primary text-[7px] px-2 py-0.5 flex-shrink-0" onclick="triggerCustomDevice('${d.id}')">
                                     <i class="fas fa-bolt mr-0.5"></i> Kirim
                                 </button>
                             </div>
@@ -2417,28 +2614,24 @@
                         const val = d.sliderValue || 50;
                         const color = d.color || '#34d399';
                         controlHTML = `
-                            <div class="p-2 bg-white/5 rounded-lg">
+                            <div class="p-1.5 bg-white/5 rounded-lg">
                                 <div class="flex items-center justify-between">
-                                    <p class="text-white text-xs font-medium">${d.name}</p>
-                                    <span class="text-[10px] text-emerald-400" id="dev_${d.id}_slider_val">${val}%</span>
+                                    <p class="text-white text-[9px] font-medium truncate">${d.name}</p>
+                                    <span class="text-[8px] text-emerald-400" id="dev_${d.id}_slider_val">${val}%</span>
                                 </div>
                                 <input type="range" min="0" max="100" value="${val}" 
-                                    class="w-full h-1.5 rounded-lg appearance-none cursor-pointer mt-1" 
+                                    class="w-full h-1 rounded-lg appearance-none cursor-pointer mt-0.5" 
                                     style="background: linear-gradient(90deg, ${color} ${val}%, rgba(255,255,255,0.1) ${val}%)"
                                     oninput="sliderCustomDevice('${d.id}', this.value)" />
-                                <p class="text-[7px] text-gray-500 mt-0.5">Kirim nilai ke ${d.topic}</p>
                             </div>
                         `;
                         break;
 
                     default:
                         controlHTML = `
-                            <div class="flex items-center justify-between p-2 bg-white/5 rounded-lg">
-                                <div>
-                                    <p class="text-white text-xs font-medium">${d.name}</p>
-                                    <p class="text-[8px] text-gray-500">Tipe: ${d.type}</p>
-                                </div>
-                                <span class="text-[8px] text-gray-400">Belum didukung</span>
+                            <div class="flex items-center justify-between p-1.5 bg-white/5 rounded-lg">
+                                <p class="text-white text-[9px] truncate">${d.name}</p>
+                                <span class="text-[6px] text-gray-400">${d.type}</span>
                             </div>
                         `;
                 }
@@ -2448,7 +2641,7 @@
         }
 
         // ============================================================
-        // 9. DEVICES - KONTROL
+        // 12. DEVICE CONTROLS
         // ============================================================
 
         function openAddDeviceModal() {
@@ -2493,15 +2686,9 @@
             saveDevices();
             renderDevices();
 
-            showToast('success', `✅ Perangkat "${name}" berhasil ditambahkan!`);
-            addLog(`🛠️ Device "${name}" added (${type})`, 'success');
+            showToast('success', `✅ Perangkat "${name}" ditambahkan!`);
+            addLog(`🛠️ Device "${name}" added`, 'success');
             closeModal('addDeviceModal');
-
-            if (isMqttConnected && mqttClient) {
-                const msg = new Paho.MQTT.Message(JSON.stringify({ action: 'add', device: newDevice }));
-                msg.destinationName = 'solarwatch/device/register';
-                mqttClient.send(msg);
-            }
         }
 
         function deleteDevice(deviceId) {
@@ -2513,11 +2700,11 @@
             const device = customDevices.find(d => d.id === deviceId);
             if (!device) return;
 
-            if (confirm(`Yakin ingin menghapus perangkat "${device.name}"?`)) {
+            if (confirm(`Yakin ingin menghapus "${device.name}"?`)) {
                 customDevices = customDevices.filter(d => d.id !== deviceId);
                 saveDevices();
                 renderDevices();
-                showToast('info', `🗑️ Perangkat "${device.name}" dihapus`);
+                showToast('info', `🗑️ "${device.name}" dihapus`);
                 addLog(`🛠️ Device "${device.name}" deleted`, 'warning');
             }
         }
@@ -2526,9 +2713,8 @@
             const device = customDevices.find(d => d.id === deviceId);
             if (!device) return;
 
-            // Cek role
-            if (currentUser && (currentUser.role === 'viewer')) {
-                showToast('error', '❌ Viewer tidak dapat mengontrol perangkat!');
+            if (currentUser && currentUser.role === 'viewer') {
+                showToast('error', '❌ Viewer tidak dapat kontrol!');
                 return;
             }
 
@@ -2560,59 +2746,33 @@
 
             const parentBtn = document.querySelector(`[onclick*="toggleCustomDevice('${deviceId}')"]`);
             if (parentBtn) {
-                parentBtn.className = device.state ? 'btn-danger text-[9px] px-3 py-1' :
-                'btn-primary text-[9px] px-3 py-1';
+                parentBtn.className = device.state ? 'btn-danger text-[7px] px-2 py-0.5' :
+                    'btn-primary text-[7px] px-2 py-0.5';
             }
 
-            const msg = device.state ? 'diaktifkan' : 'dinonaktifkan';
-            showToast('info', `🔧 ${device.name} ${msg}`);
-            addLog(`🔧 ${device.name} ${msg}`, 'info');
-
-            if (isMqttConnected && mqttClient) {
-                const payload = JSON.stringify({
-                    device: device.id,
-                    state: device.state,
-                    value: device.state ? 1 : 0,
-                    timestamp: new Date().toISOString()
-                });
-                const msgMqtt = new Paho.MQTT.Message(payload);
-                msgMqtt.destinationName = device.topic;
-                mqttClient.send(msgMqtt);
-                document.getElementById('mqttLatency').textContent = (Math.random() * 30 + 8).toFixed(0) + 'ms';
-            }
+            showToast('info', `🔧 ${device.name} ${device.state ? 'ON' : 'OFF'}`);
+            addLog(`🔧 ${device.name} ${device.state ? 'ON' : 'OFF'}`, 'info');
         }
 
         function triggerCustomDevice(deviceId) {
             const device = customDevices.find(d => d.id === deviceId);
             if (!device) return;
 
-            if (currentUser && (currentUser.role === 'viewer')) {
-                showToast('error', '❌ Viewer tidak dapat mengontrol perangkat!');
+            if (currentUser && currentUser.role === 'viewer') {
+                showToast('error', '❌ Viewer tidak dapat kontrol!');
                 return;
             }
 
-            showToast('info', `⚡ Sinyal dikirim ke ${device.name}`);
+            showToast('info', `⚡ Sinyal ke ${device.name}`);
             addLog(`⚡ ${device.name} triggered`, 'info');
-
-            if (isMqttConnected && mqttClient) {
-                const payload = JSON.stringify({
-                    device: device.id,
-                    action: 'trigger',
-                    timestamp: new Date().toISOString()
-                });
-                const msg = new Paho.MQTT.Message(payload);
-                msg.destinationName = device.topic;
-                mqttClient.send(msg);
-                document.getElementById('mqttLatency').textContent = (Math.random() * 30 + 8).toFixed(0) + 'ms';
-            }
         }
 
         function sliderCustomDevice(deviceId, value) {
             const device = customDevices.find(d => d.id === deviceId);
             if (!device) return;
 
-            if (currentUser && (currentUser.role === 'viewer')) {
-                showToast('error', '❌ Viewer tidak dapat mengontrol perangkat!');
+            if (currentUser && currentUser.role === 'viewer') {
+                showToast('error', '❌ Viewer tidak dapat kontrol!');
                 return;
             }
 
@@ -2626,24 +2786,12 @@
             if (slider) {
                 const color = device.color || '#34d399';
                 slider.style.background =
-                `linear-gradient(90deg, ${color} ${value}%, rgba(255,255,255,0.1) ${value}%)`;
-            }
-
-            if (isMqttConnected && mqttClient) {
-                const payload = JSON.stringify({
-                    device: device.id,
-                    value: parseInt(value),
-                    timestamp: new Date().toISOString()
-                });
-                const msg = new Paho.MQTT.Message(payload);
-                msg.destinationName = device.topic;
-                mqttClient.send(msg);
-                document.getElementById('mqttLatency').textContent = (Math.random() * 30 + 8).toFixed(0) + 'ms';
+                    `linear-gradient(90deg, ${color} ${value}%, rgba(255,255,255,0.1) ${value}%)`;
             }
         }
 
         // ============================================================
-        // 10. HISTORY
+        // 13. HISTORY
         // ============================================================
 
         function renderFullHistory() {
@@ -2652,28 +2800,27 @@
 
             if (historyData.length === 0) {
                 tbody.innerHTML =
-                    `<tr><td colspan="7" class="text-center text-gray-500 py-4 text-sm">Belum ada data</td></tr>`;
+                    `<tr><td colspan="6" class="text-center text-gray-500 py-3 text-[10px]">Belum ada data</td></tr>`;
                 return;
             }
 
-            tbody.innerHTML = historyData.slice(0, 100).map(d => {
+            tbody.innerHTML = historyData.slice(0, 50).map(d => {
                 const cls = d.status === 'Baik' ? 'badge-green' : d.status === 'Normal' ? 'badge-yellow' :
                     'badge-red';
                 return `<tr>
-                    <td class="text-gray-400 text-[10px]">${d.date} ${d.time}</td>
-                    <td class="text-right text-white font-medium">${d.power.toFixed(1)}</td>
-                    <td class="text-right text-gray-400">${d.voltage.toFixed(1)}</td>
-                    <td class="text-right text-gray-400">${d.current.toFixed(2)}</td>
-                    <td class="text-right text-gray-400">${d.light.toLocaleString()}</td>
-                    <td class="text-right text-gray-400">${d.temp.toFixed(1)}°C</td>
-                    <td class="text-center"><span class="text-[8px] px-1.5 py-0.5 rounded-full ${cls}">${d.status}</span></td>
+                    <td class="text-gray-400 text-[8px]">${d.date} ${d.time}</td>
+                    <td class="text-right text-white font-medium text-[9px]">${d.power.toFixed(1)}</td>
+                    <td class="text-right text-gray-400 text-[8px]">${d.voltage.toFixed(1)}</td>
+                    <td class="text-right text-gray-400 text-[8px]">${d.current.toFixed(2)}</td>
+                    <td class="text-right text-gray-400 text-[8px]">${(d.light/1000).toFixed(0)}k</td>
+                    <td class="text-center"><span class="text-[6px] px-1 py-0.5 rounded-full ${cls}">${d.status}</span></td>
                 </tr>`;
             }).join('');
         }
 
         function exportCSV() {
             if (historyData.length === 0) {
-                showToast('warning', '⚠️ Tidak ada data untuk diekspor!');
+                showToast('warning', '⚠️ Tidak ada data!');
                 return;
             }
 
@@ -2696,27 +2843,27 @@
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
 
-            showToast('success', '📥 Data berhasil diekspor ke CSV!');
-            addLog('📥 Export CSV berhasil', 'success');
+            showToast('success', '📥 CSV berhasil diekspor!');
+            addLog('📥 Export CSV', 'success');
         }
 
         function clearAllHistory() {
             if (historyData.length === 0) {
-                showToast('warning', '⚠️ Tidak ada data untuk dihapus!');
+                showToast('warning', '⚠️ Tidak ada data!');
                 return;
             }
 
             if (currentUser && currentUser.role !== 'admin') {
-                showToast('error', '❌ Hanya Admin yang dapat menghapus semua history!');
+                showToast('error', '❌ Hanya Admin!');
                 return;
             }
 
-            if (confirm('⚠️ Yakin ingin menghapus SEMUA data historis? Tindakan ini tidak dapat dibatalkan!')) {
+            if (confirm('⚠️ Hapus SEMUA data historis?')) {
                 historyData = [];
                 saveHistory();
                 renderFullHistory();
-                showToast('success', '🗑️ Semua data historis telah dihapus!');
-                addLog('🗑️ Semua history dihapus', 'warning');
+                showToast('success', '🗑️ Semua data dihapus!');
+                addLog('🗑️ History cleared', 'warning');
             }
         }
 
@@ -2725,12 +2872,14 @@
         }
 
         // ============================================================
-        // 11. ALERTS
+        // 14. ALERTS
         // ============================================================
+
+        let notifStates = { email: true, sms: false, push: true };
 
         function toggleNotification(type) {
             if (currentUser && currentUser.role === 'viewer') {
-                showToast('error', '❌ Viewer tidak dapat mengubah notifikasi!');
+                showToast('error', '❌ Viewer tidak dapat ubah!');
                 return;
             }
 
@@ -2739,16 +2888,16 @@
             const isActive = notifStates[type];
 
             btn.textContent = isActive ? 'Aktif' : 'Nonaktif';
-            btn.className = isActive ? 'btn-primary text-[9px] px-3 py-1' : 'btn-secondary text-[9px] px-3 py-1';
+            btn.className = isActive ? 'btn-primary text-[8px] px-3 py-1' : 'btn-secondary text-[8px] px-3 py-1';
 
             const labels = { email: 'Email', sms: 'SMS', push: 'Push' };
-            showToast('info', `📧 ${labels[type]} notifikasi ${isActive ? 'diaktifkan' : 'dinonaktifkan'}`);
-            addLog(`📧 ${labels[type]} notifikasi ${isActive ? 'ON' : 'OFF'}`, 'info');
+            showToast('info', `📧 ${labels[type]} ${isActive ? 'ON' : 'OFF'}`);
+            addLog(`📧 ${labels[type]} ${isActive ? 'ON' : 'OFF'}`, 'info');
         }
 
         function openAdvancedSettings() {
             if (currentUser && currentUser.role !== 'admin') {
-                showToast('error', '❌ Hanya Admin yang dapat mengakses pengaturan lanjutan!');
+                showToast('error', '❌ Hanya Admin!');
                 return;
             }
             openModal('advancedSettingsModal');
@@ -2757,59 +2906,52 @@
         function saveAdvancedSettings() {
             const min = document.getElementById('thresholdMin').value;
             const max = document.getElementById('thresholdMax').value;
-            const email = document.getElementById('notifEmail').value;
-            const wa = document.getElementById('notifWhatsapp').value;
 
             if (parseFloat(min) >= parseFloat(max)) {
-                showToast('error', '❌ Daya minimum harus kurang dari maksimum!');
+                showToast('error', '❌ Min harus < Max!');
                 return;
             }
 
             localStorage.setItem('solarwatch_advanced', JSON.stringify({
                 thresholdMin: min,
                 thresholdMax: max,
-                notifEmail: email,
-                notifWhatsapp: wa,
+                notifEmail: document.getElementById('notifEmail').value,
+                notifWhatsapp: document.getElementById('notifWhatsapp').value,
             }));
 
-            showToast('success', '⚙️ Pengaturan lanjutan disimpan!');
-            addLog('⚙️ Advanced settings saved', 'success');
+            showToast('success', '⚙️ Pengaturan disimpan!');
+            addLog('⚙️ Advanced saved', 'success');
             closeModal('advancedSettingsModal');
         }
 
         // ============================================================
-        // 12. SETTINGS
+        // 15. SETTINGS
         // ============================================================
 
         function saveSettings() {
             if (currentUser && currentUser.role !== 'admin') {
-                showToast('error', '❌ Hanya Admin yang dapat mengubah pengaturan!');
+                showToast('error', '❌ Hanya Admin!');
                 return;
             }
 
-            const name = document.getElementById('systemName').value;
-            const broker = document.getElementById('mqttBroker').value;
-            const interval = document.getElementById('updateInterval').value;
-
             localStorage.setItem('solarwatch_settings', JSON.stringify({
-                systemName: name,
-                mqttBroker: broker,
-                updateInterval: interval,
+                systemName: document.getElementById('systemName').value,
+                mqttBroker: document.getElementById('mqttBroker').value,
+                updateInterval: document.getElementById('updateInterval').value,
             }));
 
-            showToast('success', '💾 Pengaturan umum disimpan!');
-            addLog('⚙️ Settings saved: ' + name, 'success');
+            showToast('success', '💾 Pengaturan disimpan!');
+            addLog('⚙️ Settings saved', 'success');
         }
 
         function updateSecurity() {
             if (currentUser && currentUser.role !== 'admin') {
-                showToast('error', '❌ Hanya Admin yang dapat memperbarui keamanan!');
+                showToast('error', '❌ Hanya Admin!');
                 return;
             }
 
             const username = document.getElementById('securityUsername').value.trim();
             const password = document.getElementById('securityPassword').value.trim();
-            const apiKey = document.getElementById('apiKey').value.trim();
 
             if (!username) {
                 showToast('error', '❌ Username tidak boleh kosong!');
@@ -2822,12 +2964,9 @@
                 if (password) current.password = password;
             }
 
-            localStorage.setItem('solarwatch_api_key', apiKey);
             saveUsers();
-
             showToast('success', '🔑 Keamanan diperbarui!');
-            addLog('🔑 Security updated for user: ' + username, 'success');
-
+            addLog('🔑 Security updated', 'success');
             document.getElementById('userDisplay').textContent = username.charAt(0).toUpperCase() + username.slice(1);
         }
 
@@ -2836,7 +2975,7 @@
         }
 
         // ============================================================
-        // 13. USERS
+        // 16. USERS
         // ============================================================
 
         function renderUsers() {
@@ -2851,19 +2990,19 @@
             container.innerHTML = users.map(u => `
                 <div class="user-item">
                     <div class="flex items-center gap-2">
-                        <div class="w-7 h-7 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center text-white text-xs font-bold">
+                        <div class="w-6 h-6 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center text-white text-[8px] font-bold">
                             ${u.username.charAt(0).toUpperCase()}
                         </div>
                         <div>
-                            <p class="text-white text-xs font-medium">${u.username}</p>
-                            <p class="text-[8px] text-gray-400">${u.email} · ${u.role}</p>
+                            <p class="text-white text-[10px] font-medium">${u.username}</p>
+                            <p class="text-[6px] text-gray-400">${u.email} · ${u.role}</p>
                         </div>
                     </div>
                     <div class="flex items-center gap-1">
-                        <span class="text-[8px] px-1.5 py-0.5 rounded-full ${u.id === 1 ? 'badge-green' : 'badge-blue'}">
+                        <span class="text-[6px] px-1 py-0.5 rounded-full ${u.id === 1 ? 'badge-green' : 'badge-blue'}">
                             ${u.id === 1 ? 'Owner' : u.role}
                         </span>
-                        ${u.id !== 1 ? `<button onclick="deleteUser(${u.id})" class="text-red-400 hover:text-red-300 text-xs"><i class="fas fa-trash"></i></button>` : ''}
+                        ${u.id !== 1 ? `<button onclick="deleteUser(${u.id})" class="text-red-400 hover:text-red-300 text-[8px]"><i class="fas fa-trash"></i></button>` : ''}
                     </div>
                 </div>
             `).join('');
@@ -2875,7 +3014,7 @@
 
         function openAddUserModal() {
             if (currentUser && currentUser.role !== 'admin') {
-                showToast('error', '❌ Hanya Admin yang dapat menambah user!');
+                showToast('error', '❌ Hanya Admin!');
                 return;
             }
             document.getElementById('newUsername').value = '';
@@ -2906,19 +3045,17 @@
                 return;
             }
 
-            const newUser = {
+            users.push({
                 id: Math.max(...users.map(u => u.id), 0) + 1,
                 username,
                 email,
                 password,
                 role,
-            };
+            });
 
-            users.push(newUser);
             saveUsers();
             renderUsers();
-
-            showToast('success', `👤 User ${username} berhasil ditambahkan!`);
+            showToast('success', `👤 User ${username} ditambahkan!`);
             addLog(`👤 User ${username} added (${role})`, 'success');
             closeModal('addUserModal');
         }
@@ -2930,7 +3067,7 @@
             }
 
             if (currentUser && currentUser.role !== 'admin') {
-                showToast('error', '❌ Hanya Admin yang dapat menghapus user!');
+                showToast('error', '❌ Hanya Admin!');
                 return;
             }
 
@@ -2945,7 +3082,7 @@
         }
 
         // ============================================================
-        // 14. MQTT
+        // 17. MQTT
         // ============================================================
 
         let mqttClient = null;
@@ -2960,8 +3097,8 @@
                 mqttClient.onConnectionLost = function() {
                     isMqttConnected = false;
                     document.getElementById('mqttDot').className = 'status-dot offline';
-                    document.getElementById('mqttStatus').textContent = 'Disconnected';
-                    document.getElementById('mqttLatency').textContent = '--ms';
+                    document.getElementById('mqttStatus').textContent = 'Offline';
+                    document.getElementById('mqttLatency').textContent = '--';
                 };
 
                 mqttClient.onMessageArrived = function(msg) {
@@ -2978,33 +3115,30 @@
                     onSuccess: function() {
                         isMqttConnected = true;
                         document.getElementById('mqttDot').className = 'status-dot online';
-                        document.getElementById('mqttStatus').textContent = 'Connected';
+                        document.getElementById('mqttStatus').textContent = 'Online';
                         addLog('✅ MQTT terhubung', 'success');
-                        ['power', 'voltage', 'current', 'light', 'temperature', 'battery'].forEach(t => {
-                            mqttClient.subscribe('solarwatch/panel/' + t);
-                        });
                     },
                     onFailure: function() {
                         document.getElementById('mqttDot').className = 'status-dot offline';
-                        document.getElementById('mqttStatus').textContent = 'Offline (Dummy)';
+                        document.getElementById('mqttStatus').textContent = 'Dummy';
                         addLog('⚠️ MQTT offline, pakai dummy', 'warning');
                     }
                 });
             } catch (e) {
                 document.getElementById('mqttDot').className = 'status-dot offline';
-                document.getElementById('mqttStatus').textContent = 'Offline (Dummy)';
+                document.getElementById('mqttStatus').textContent = 'Dummy';
                 addLog('⚠️ MQTT error, pakai dummy', 'warning');
             }
         }
 
         // ============================================================
-        // 15. INIT
+        // 18. INIT
         // ============================================================
 
         let updateInterval = null;
 
         function init() {
-            // Cek login
+            // Login check
             if (currentUser) {
                 document.getElementById('loginOverlay').classList.add('hidden');
                 document.getElementById('userDisplay').textContent = currentUser.username.charAt(0).toUpperCase() +
@@ -3027,7 +3161,6 @@
             updateAnalytics();
 
             addLog('🚀 SolarWatch Pro siap', 'success');
-            addLog('📊 Data dummy aktif', 'info');
 
             updateInterval = setInterval(() => {
                 if (currentPage === 'dashboard') updateDashboard();
@@ -3035,7 +3168,7 @@
 
             setTimeout(connectMqtt, 1000);
             setTimeout(() => {
-                if (currentUser) showToast('success', '🚀 Selamat datang, ' + currentUser.username + '!');
+                if (currentUser) showToast('success', '🚀 Selamat datang!');
             }, 600);
 
             const savedSettings = JSON.parse(localStorage.getItem('solarwatch_settings'));
